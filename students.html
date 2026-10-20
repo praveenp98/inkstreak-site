@@ -29,7 +29,7 @@
 </div></header>
 <main>
 <section class="hero sub"><div class="wrap hero-grid">
-<div><p class="kicker">For students</p><h1>Track every essay, word by word</h1><p class="lead">Keep drafts, outlines and revision lists tidy, see how much you wrote each day, and build a steady writing habit before deadlines.</p><a class="btn" href="#get">Coming to the App Store</a><p class="muted small">7 days free, then $7.99/month or $49.99/year.</p></div>
+<div><p class="kicker">For students</p><h1>Track every essay, word by word</h1><p class="lead">Keep drafts, outlines and revision lists tidy, see how much you wrote each day, and build a steady writing habit before deadlines.</p><a class="btn" href="#get">Coming to the App Store</a><p class="muted small">7 days free, then <span data-inr="₹99">$7.99</span>/month or <span data-inr="₹999">$49.99</span>/year.</p></div>
 <div class="hero-img"><img class="phone " src="screen-study.png" alt="Study notes" width="285" height="582" loading="lazy"></div></div></section><section class="feature"><div class="wrap feature-grid">
 <div class="feature-text"><p class="kicker">Notes</p><h2>A folder for every subject</h2><p>Name your folders — Study, Thesis, History — and give each an emoji.</p><ul class="ticks"><li>Headlines and previews</li><li>Search everything</li><li>Export to a spreadsheet</li></ul></div>
 <div class="feature-img"><img class="phone " src="screen-notes.png" alt="Notes" width="285" height="582" loading="lazy"></div></div></section><section class="feature flip"><div class="wrap feature-grid">
@@ -39,7 +39,7 @@
 <section class="cta-band" id="get"><div class="wrap center">
   <img src="inky.png" alt="" width="72" height="72">
   <h2>Keep writing human.</h2>
-  <p>7 days free, then $7.99/month or $49.99/year. No account. No ads.</p>
+  <p>7 days free, then <span data-inr="₹99">$7.99</span>/month or <span data-inr="₹999">$49.99</span>/year. No account. No ads.</p>
   <p><b>Launching on the App Store very soon.</b> Follow along: <a style="color:#fff;text-decoration:underline" href="mailto:support@inkstreak.app?subject=Tell%20me%20when%20Inkstreak%20launches">get an email when it's out</a>.</p>
 </div></section>
 </main>
@@ -51,5 +51,10 @@
     <a href="students.html">Students</a><a href="voice-to-text.html">Voice to text</a><a href="typing-stats.html">Word counter keyboard</a>
     <a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
 </div><div class="wrap muted small-print">© 2026 Inkstreak · <a href="mailto:support@inkstreak.app">support@inkstreak.app</a></div></footer>
+<script>
+(function(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";
+if(tz==="Asia/Kolkata"||tz==="Asia/Calcutta"){document.querySelectorAll("[data-inr]").forEach(function(el){el.textContent=el.getAttribute("data-inr");});
+document.documentElement.classList.add("in");}}catch(e){}})();
+</script>
 </body>
 </html>

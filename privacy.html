@@ -28,7 +28,7 @@
 </div></header>
 <main>
 <section class="section"><div class="wrap narrow prose">
-<h1>Privacy policy</h1><p class="muted">Last updated 2026-10-19</p>
+<h1>Privacy policy</h1><p class="muted">Last updated 2026-10-20</p>
 <p><b>Short version:</b> Inkstreak doesn't collect your data. There's no account, no server, no ads and no analytics. What you write stays on your iPhone.</p>
 <h2>What stays on your iPhone</h2>
 <p>Notes you save (typed, spoken or scanned), their folders and headlines, and your daily word and character counts. Notes are not uploaded anywhere and don't sync between devices. You can export them at any time from Setup or Notes.</p>
@@ -57,7 +57,7 @@
 <section class="cta-band" id="get"><div class="wrap center">
   <img src="inky.png" alt="" width="72" height="72">
   <h2>Keep writing human.</h2>
-  <p>7 days free, then $7.99/month or $49.99/year. No account. No ads.</p>
+  <p>7 days free, then <span data-inr="₹99">$7.99</span>/month or <span data-inr="₹999">$49.99</span>/year. No account. No ads.</p>
   <p><b>Launching on the App Store very soon.</b> Follow along: <a style="color:#fff;text-decoration:underline" href="mailto:support@inkstreak.app?subject=Tell%20me%20when%20Inkstreak%20launches">get an email when it's out</a>.</p>
 </div></section>
 </main>
@@ -69,5 +69,10 @@
     <a href="students.html">Students</a><a href="voice-to-text.html">Voice to text</a><a href="typing-stats.html">Word counter keyboard</a>
     <a href="privacy.html">Privacy</a><a href="support.html">Support</a></nav>
 </div><div class="wrap muted small-print">© 2026 Inkstreak · <a href="mailto:support@inkstreak.app">support@inkstreak.app</a></div></footer>
+<script>
+(function(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";
+if(tz==="Asia/Kolkata"||tz==="Asia/Calcutta"){document.querySelectorAll("[data-inr]").forEach(function(el){el.textContent=el.getAttribute("data-inr");});
+document.documentElement.classList.add("in");}}catch(e){}})();
+</script>
 </body>
 </html>
