@@ -133,3 +133,4 @@ details p{color:#4B5563;margin-top:10px}
 .foot nav{display:grid;grid-template-columns:repeat(2,auto);gap:6px 30px}
 .foot nav a{color:var(--ink);font-size:15px}
 .small-print{margin-top:30px;font-size:14px}
+.lead.narrow{margin-left:auto;margin-right:auto}
