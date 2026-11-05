@@ -21,7 +21,7 @@
 <title>Inkstreak Web</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
 /* Layout: sticky stat bar on top; three views (Write, Progress, Get the app) switched by hash. Write = editor + notes rail. */
 :root{
@@ -266,6 +266,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
           <span class="num"><b id="noteWc">0</b> words in this note</span>
           <span class="grow soft" id="saved">Saved in this browser</span>
           <div class="sprint" id="sprintBox"></div>
+          <button class="btn small" id="receiptBtn" type="button">🧾 Human receipt</button>
           <button class="btn small" id="focusBtn" type="button">Focus</button>
           <button class="btn small ghost danger" id="delNote" type="button">Delete</button>
         </div>
@@ -387,6 +388,15 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <img id="shareImg" alt="Your writing card">
     <p class="soft" style="font-size:13px">Press and hold (or right-click) the image to save it if the buttons don't work in your browser.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="shareDl" type="button">Download</button><button class="btn" id="shareNative" type="button" hidden>Share</button></div>
+  </div>
+</div>
+<div class="modal" id="receiptModal" hidden role="dialog" aria-modal="true" aria-labelledby="receiptH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="receiptH" style="flex:1">Written by a human</h2><button class="btn small ghost" type="button" data-close="receiptModal">Close</button></div>
+    <p class="soft" style="font-size:13.5px">Proof of how this note was written: typed words, pastes, backspaces and time. Your text isn't on the receipt.</p>
+    <label class="toggle" style="font-size:14px"><input id="rcTitle" type="checkbox"> Show the note's title</label>
+    <img id="receiptImg" alt="Your human writing receipt">
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="rcShare" type="button">Share</button><button class="btn" id="rcDl" type="button">Download</button></div>
   </div>
 </div>
 <div class="modal" id="portraitModal" hidden role="dialog" aria-modal="true" aria-labelledby="portraitH">
@@ -573,7 +583,7 @@ function renderSprint() {
     else box.querySelector(".sprint-live").textContent = `${m}:${pad(s)} · ${fmt(sprint.words)} words`;
   } else if (box.dataset.mode !== "idle") {
     box.dataset.mode = "idle";
-    box.innerHTML = `<span class="soft">Sprint</span><button class="btn small" type="button" data-sprint="15">15 min</button><button class="btn small" type="button" data-sprint="25">25 min</button>`;
+    box.innerHTML = `<span class="soft">Sprint</span><button class="btn small" type="button" data-sprint="5">5 min</button><button class="btn small" type="button" data-sprint="15">15</button><button class="btn small" type="button" data-sprint="25">25</button>`;
   }
 }
 function tick() {
@@ -784,6 +794,13 @@ $("#body").addEventListener("input", e => {
   const n = activeNote(); if (!n) return;
   n.body = e.target.value; n.updatedAt = Date.now();
   const now = wc(n.body), delta = now - lastWc; lastWc = now;
+  const pf = n.proof || (n.proof = { typed: 0, pastes: 0, pasted: 0, backspaces: 0, activeMs: 0, start: 0, last: 0 });
+  const t = Date.now(), it = e.inputType || "";
+  if (pf.last && t - pf.last < 30000) pf.activeMs += t - pf.last;
+  pf.last = t; pf.start = pf.start || t;
+  if (it.startsWith("delete")) pf.backspaces++;
+  if (it === "insertFromPaste" || it === "insertFromDrop") { pf.pastes++; if (delta > 0) pf.pasted += delta; }
+  else if (delta > 0) pf.typed += delta;
   if (delta > 0) {
     if (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop") { if (delta > 3) toast("Pasted words aren't counted. Use Log words for writing done elsewhere."); }
     else addTyped(delta);
@@ -816,7 +833,7 @@ $("#focusBtn").addEventListener("click", () => {
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
-  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; }
+  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
 });
 $("#logForm").addEventListener("submit", e => {
@@ -883,6 +900,62 @@ window.addEventListener("storage", e => { if (e.key === KEY) { S = load(); ensur
 // Day rollover while the page is open
 let lastDay = dayKey();
 setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderCounts(); if (!$("#v-progress").hidden) renderProgress(); } }, 30000);
+
+// ---- Human receipt ----
+function dur(ms) { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h ? `${h}h ${m}m` : `${m}m ${pad(s % 60)}s`; }
+let rcCanvas = null;
+async function makeReceipt(n) {
+  try { await Promise.all(["700 40px 'Courier Prime'", "400 40px 'Courier Prime'", "900 40px Nunito"].map(f => document.fonts.load(f))); } catch (e) {}
+  const pf = n.proof, W = 1080, H = 1350, M = "'Courier Prime', 'Courier New', monospace", F = "Nunito, system-ui, sans-serif";
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d");
+  x.fillStyle = "#4FC31A"; x.fillRect(0, 0, W, H);
+  const L = 190, R = W - 190, T = 70, B = H - 70;
+  x.fillStyle = "#FFFDF7"; x.beginPath(); x.moveTo(L, T);
+  for (let i = 0, n2 = 22; i <= n2; i++) x.lineTo(L + (R - L) * i / n2, T + (i % 2 ? 14 : 0));
+  x.lineTo(R, B); for (let i = 22; i >= 0; i--) x.lineTo(L + (R - L) * i / 22, B - (i % 2 ? 14 : 0)); x.closePath();
+  x.shadowColor = "rgba(0,0,0,.18)"; x.shadowBlur = 30; x.shadowOffsetY = 10; x.fill(); x.shadowColor = "transparent";
+  const ink = "#2A2A2A"; let y = T + 110; x.fillStyle = ink; x.textAlign = "center";
+  x.font = `700 46px ${M}`; x.fillText("INKSTREAK", W / 2, y); y += 52;
+  x.font = `700 34px ${M}`; x.fillText("WRITTEN BY A HUMAN", W / 2, y); y += 40;
+  x.font = `400 26px ${M}`; const d = new Date(pf.last || Date.now());
+  x.fillText(d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() + "  " + pad(d.getHours()) + ":" + pad(d.getMinutes()), W / 2, y); y += 34;
+  if ($("#rcTitle").checked) { let t = noteTitle(n).toUpperCase(); if (t.length > 30) t = t.slice(0, 29) + "…"; x.fillText(t, W / 2, y); y += 34; }
+  const dash = () => { x.textAlign = "center"; x.font = `400 30px ${M}`; x.fillText("- - - - - - - - - - - - - - - - - - -", W / 2, y); y += 54; };
+  y += 6; dash();
+  const total = pf.typed + pf.pasted, mins = Math.max(pf.activeMs / 60000, 1 / 60), wpm = Math.round(pf.typed / mins);
+  const rows = [["WORDS TYPED", fmt(pf.typed)], ["WORDS PASTED", fmt(pf.pasted)], ["BACKSPACES", fmt(pf.backspaces)], ["TIME WRITING", dur(pf.activeMs)], ["TYPING SPEED", pf.activeMs >= 10000 && wpm <= 250 ? `${wpm} WPM` : "--"]];
+  x.font = `400 34px ${M}`;
+  for (const [k, v] of rows) { x.textAlign = "left"; x.fillText(k, L + 60, y); x.textAlign = "right"; x.fillText(v, R - 60, y); y += 56; }
+  dash();
+  const pct = total ? Math.round(pf.typed / total * 100) : 100;
+  x.textAlign = "left"; x.font = `700 40px ${M}`; x.fillText("TYPED BY HAND", L + 60, y); x.textAlign = "right"; x.fillText(pct + "%", R - 60, y); y += 60;
+  x.textAlign = "center"; x.font = `400 28px ${M}`;
+  x.fillText(pf.backspaces > 5 ? `DELETED ${fmt(pf.backspaces)} TIMES. VERY HUMAN.` : "NO AI. NO COPY-PASTE. JUST ME.", W / 2, y); y += 70;
+  // barcode
+  let bx = L + 90; const by = y; x.fillStyle = ink;
+  const seed = String(n.id) + pf.typed; for (let i = 0; bx < R - 90; i++) { const c = seed.charCodeAt(i % seed.length); const w = 3 + (c % 4) * 2; if (i % 2 === 0) x.fillRect(bx, by, w, 90); bx += w + 3; }
+  y += 140; x.font = `700 28px ${M}`; x.fillText("INKSTREAK.APP · KEEP WRITING HUMAN", W / 2, y);
+  // stamp
+  x.save(); x.translate(R - 150, B - 150); x.rotate(-0.28); x.strokeStyle = "#3E9C12"; x.lineWidth = 8; x.globalAlpha = .85;
+  x.beginPath(); x.arc(0, 0, 92, 0, 7); x.stroke(); x.beginPath(); x.arc(0, 0, 76, 0, 7); x.lineWidth = 3; x.stroke();
+  x.fillStyle = "#3E9C12"; x.font = `900 38px ${F}`; x.textAlign = "center"; x.fillText("HUMAN", 0, 8); x.font = `900 20px ${F}`; x.fillText(pct === 100 ? "100% TYPED" : pct + "% TYPED", 0, 40); x.restore();
+  x.textAlign = "left";
+  return cv;
+}
+async function openReceipt() {
+  const n = activeNote();
+  if (!n || !n.proof || n.proof.typed < 20) { toast("Type at least 20 words in this note first. Your receipt counts what you type from now on."); return; }
+  $("#receiptModal").hidden = false;
+  rcCanvas = await makeReceipt(n); $("#receiptImg").src = rcCanvas.toDataURL("image/png");
+}
+$("#receiptBtn").addEventListener("click", openReceipt);
+$("#rcTitle").addEventListener("change", openReceipt);
+$("#rcDl").addEventListener("click", () => { if (!rcCanvas) return; try { const a = document.createElement("a"); a.href = rcCanvas.toDataURL("image/png"); a.download = `human-receipt-${dayKey()}.png`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the image to save it."); } });
+$("#rcShare").addEventListener("click", () => rcCanvas && rcCanvas.toBlob(async b => {
+  const f = new File([b], "human-receipt.png", { type: "image/png" }), text = "Written by a human. Proof: inkstreak.app/write";
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text }); return; } } catch (e) { return; }
+  copy(text, "Caption copied. Save the image and post it with the caption.");
+}));
 
 // ---- Rewards ----
 const MILESTONES = [
