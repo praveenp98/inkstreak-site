@@ -179,6 +179,22 @@ body.focus main{padding-block:8px}
 .sheet img{width:100%;border-radius:14px;border:2px solid var(--line)}
 .seg{display:flex;gap:6px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.nudge{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-t);border:2px solid var(--green);border-radius:var(--r);padding:12px 16px;margin-bottom:16px}
+.nudge.warn{background:var(--card);border-color:var(--orange)}
+.nudge p{flex:1;min-width:220px;font-size:14.5px}
+.nudge .acts{display:flex;gap:8px;flex-wrap:wrap}
+.rw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media (max-width:700px){.rw{grid-template-columns:1fr}}
+.rw .t{border:2px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start}
+.rw .t.open{border-color:var(--green);background:var(--green-t)}
+.rw .t .lk{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--soft)}
+.rw .t.open .lk{color:var(--green-d)}
+.rw .t b{font-size:17px;font-weight:900}
+.rw .t p{font-size:13.5px;color:var(--soft)}
+.rw .mini{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.rw .mini i{display:block;height:100%;background:var(--orange)}
+.words{display:flex;flex-wrap:wrap;gap:6px}
+.words span{background:var(--green-t);color:var(--ink);border-radius:999px;padding:4px 10px;font-weight:800}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -214,6 +230,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 
   <!-- WRITE -->
   <section class="view" id="v-write">
+    <div id="nudges"></div>
     <div class="card today">
       <div>
         <div class="big num"><span id="tWords">0</span> <span class="soft" style="font-size:18px;font-weight:800">of <span id="tGoal">1,667</span> words today</span></div>
@@ -275,6 +292,8 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
       </div>
     </div>
 
+    <div class="card" id="rewards"></div>
+
     <div class="grid2">
       <div class="card">
         <h2>Logged words</h2>
@@ -313,6 +332,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <label class="btn" for="impFile" style="cursor:pointer">Load a backup</label>
         <input id="impFile" type="file" accept=".json,application/json" hidden>
       </div>
+      <p class="soft" id="protect" style="font-size:13.5px;margin-top:10px"></p>
       <p class="msg" id="dataMsg"></p>
     </div>
   </section>
@@ -368,6 +388,12 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="shareDl" type="button">Download</button><button class="btn" id="shareNative" type="button" hidden>Share</button></div>
   </div>
 </div>
+<div class="modal" id="portraitModal" hidden role="dialog" aria-modal="true" aria-labelledby="portraitH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="portraitH" style="flex:1">Your word portrait</h2><button class="btn small ghost" type="button" data-close="portraitModal">Close</button></div>
+    <div id="portraitBody" class="stack"></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden aria-live="polite"></div>
 
 <script>
@@ -400,7 +426,7 @@ function fresh() {
     version: 1, source: "web", deviceId: uuid(),
     settings: { goal: 1667, restDays: true, best: 0,
       challenge: t.getMonth() === 10 ? { name: "November novel", target: 50000, start: `${t.getFullYear()}-11-01`, days: 30 } : null },
-    days: {}, logs: [], signups: {},
+    days: {}, logs: [], signups: {}, firstUse: now, lastBackup: 0, dismiss: {}, persisted: false,
     notes: [{ id: uuid(), title: "Start here", body: WELCOME, tag: "", createdAt: now, updatedAt: now, deleted: false }],
     activeId: null
   };
@@ -412,7 +438,7 @@ function normalize(s) {
   s.days = s.days && typeof s.days === "object" ? s.days : {};
   s.logs = Array.isArray(s.logs) ? s.logs : [];
   s.notes = Array.isArray(s.notes) ? s.notes : [];
-  s.signups = s.signups || {};
+  s.signups = s.signups || {}; s.dismiss = s.dismiss || {}; s.firstUse = s.firstUse || Date.now(); s.lastBackup = s.lastBackup || 0;
   s.deviceId = s.deviceId || f.deviceId;
   s.version = 1; s.source = "web";
   return s;
@@ -437,7 +463,12 @@ function save() {
 const day = k => S.days[k] || (S.days[k] = { typed: 0, logged: 0 });
 const total = k => { const d = S.days[k]; return d ? (+d.typed || 0) + (+d.logged || 0) : 0; };
 let sprint = null;
+async function askPersist() {
+  if (S.persisted || askPersist.asked) return; askPersist.asked = true;
+  try { if (navigator.storage && navigator.storage.persist) { S.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist()); save(); } } catch (e) {}
+}
 function addTyped(n) {
+  askPersist();
   const d = day(dayKey()); d.typed = (+d.typed || 0) + n; d.updatedAt = Date.now();
   if (sprint) sprint.words += n;
   save(); renderCounts();
@@ -498,7 +529,10 @@ function renderCounts() {
   let note = t >= g ? "Goal done for today. Anything more is a bonus." : `${fmt(g - t)} words to go.`;
   if (c && c.status === "on") note += ` ${c.name}: day ${c.idx} of ${c.days}, ${fmt(c.sum)} of ${fmt(c.target)}.`;
   if (!st.wroteToday && st.count > 0) note += " Write a little today to keep your streak.";
+  const nx = MILESTONES.find(m => rewardBase() < m.at);
+  if (nx) note += ` Next unlock at ${fmt(nx.at)} words: ${fmt(nx.at - rewardBase())} to go.`;
   $("#tNote").textContent = note;
+  renderNudges();
   const n = activeNote(); if (n) $("#noteWc").textContent = fmt(wc(n.body));
   renderSprint();
 }
@@ -548,6 +582,7 @@ function tick() {
 }
 
 function renderProgress() {
+  renderRewards(); renderProtect();
   const st = streakInfo();
   $("#sNow").textContent = st.count; $("#sBest").textContent = Math.max(S.settings.best || 0, st.count);
   $("#sRest").textContent = !S.settings.restDays ? "Rest days are off. Every day counts." :
@@ -780,13 +815,14 @@ $("#focusBtn").addEventListener("click", () => {
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
-  if (e.key === "Escape" && !$("#shareModal").hidden) $("#shareModal").hidden = true;
+  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
 });
 $("#logForm").addEventListener("submit", e => {
   e.preventDefault();
   const n = Math.round(+$("#logN").value);
   if (!(n > 0) || n > 100000) { toast("Enter a number of words between 1 and 100,000."); return; }
+  askPersist();
   const k = dayKey(), d = day(k); d.logged = (+d.logged || 0) + n; d.updatedAt = Date.now();
   S.logs.push({ id: uuid(), day: k, words: n, note: "", createdAt: Date.now() });
   $("#logN").value = ""; save(); renderCounts(); toast(`Logged ${fmt(n)} words for today.`);
@@ -812,8 +848,8 @@ $("#setForm").addEventListener("submit", e => {
   save(); renderProgress(); renderCounts(); $("#setMsg").textContent = "Saved.";
   setTimeout(() => $("#setMsg").textContent = "", 2500);
 });
-$("#expJson").addEventListener("click", () => download(`inkstreak-backup-${dayKey()}.json`, JSON.stringify(exportObj(), null, 2), "application/json"));
-$("#copyJson").addEventListener("click", () => copy(JSON.stringify(exportObj()), "Backup copied. Paste it into a note or email to yourself."));
+$("#expJson").addEventListener("click", () => { S.lastBackup = Date.now(); save(); renderNudges(); renderProtect(); download(`inkstreak-backup-${dayKey()}.json`, JSON.stringify(exportObj(), null, 2), "application/json"); });
+$("#copyJson").addEventListener("click", () => { S.lastBackup = Date.now(); save(); renderNudges(); renderProtect(); copy(JSON.stringify(exportObj()), "Backup copied. Paste it into a note or email to yourself."); });
 $("#expTxt").addEventListener("click", () => {
   const txt = liveNotes().map(n => `${noteTitle(n)}\n${new Date(n.updatedAt).toLocaleString()}${n.tag ? " · " + n.tag : ""}\n\n${n.body}`).join("\n\n----------\n\n");
   download(`inkstreak-notes-${dayKey()}.txt`, txt, "text/plain");
@@ -846,6 +882,91 @@ window.addEventListener("storage", e => { if (e.key === KEY) { S = load(); ensur
 // Day rollover while the page is open
 let lastDay = dayKey();
 setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderCounts(); if (!$("#v-progress").hidden) renderProgress(); } }, 30000);
+
+// ---- Rewards ----
+const MILESTONES = [
+  { at: 10000, name: "Word portrait", desc: "Your most-used words and what your writing looks like so far." },
+  { at: 25000, name: "A letter from Inky", desc: "Inky reads your themes back to you." },
+  { at: 50000, minDays: 15, name: "Something special", desc: "Only for people who reach 50,000 words, written on at least 15 days. We're not saying more yet." }
+];
+function rewardBase() {
+  const c = chInfo();
+  if (c && c.status !== "before") return c.sum;
+  return Object.keys(S.days).reduce((a, k) => a + total(k), 0);
+}
+function renderRewards() {
+  const base = rewardBase(), c = chInfo();
+  $("#rewards").innerHTML = `<h2>Unlocks</h2><p class="soft" style="font-size:14px">${c && c.status !== "before" ? `Counting your ${esc(c.name)} words.` : "Counting all your words."} Keep writing to open each one.</p>
+  <div class="rw">${MILESTONES.map((m, i) => {
+    const dw = Object.keys(S.days).filter(k => total(k) > 0).length, needD = m.minDays ? Math.max(0, m.minDays - dw) : 0;
+    const open = base >= m.at && !needD, pct = Math.min(100, base / m.at * 100);
+    const act = !open ? `<div class="mini"><i style="width:${pct}%"></i></div><p class="num">${base < m.at ? fmt(m.at - base) + " words to go" : ""}${base < m.at && needD ? " · " : ""}${needD ? needD + " more writing " + (needD === 1 ? "day" : "days") : ""}</p>`
+      : i === 0 ? `<button class="btn small primary" type="button" id="openPortrait">Open</button>`
+      : `<p>Unlocked. It's being made and will appear right here.</p>`;
+    return `<div class="t${open ? " open" : ""}"><span class="lk">${open ? "Unlocked" : "🔒 " + fmt(m.at) + " words"}</span><b>${m.name}</b><p>${m.desc}</p>${act}</div>`;
+  }).join("")}</div>`;
+  const b = $("#openPortrait"); if (b) b.addEventListener("click", openPortrait);
+}
+const STOP = new Set("the and for that this with you your are was were have has had but not they them their there then than what when where which who will would could should into onto from about just like also very really been being some more most much many such only over under again once here why how all any each few other own same both its it's i'm i've i'd don't didn't can't won't isn't wasn't our ours she her hers him his himself herself myself yourself itself themselves we us did does doing done get got make made one two can may might must shall upon off out too now yes yeah okay ok that's there's let's".split(" "));
+function openPortrait() {
+  const all = liveNotes().map(n => n.body).join(" ").toLowerCase();
+  const counts = {};
+  (all.match(/[\p{L}'’]+/gu) || []).forEach(w => { w = w.replace(/’/g, "'"); if (w.length < 3 || STOP.has(w)) return; counts[w] = (counts[w] || 0) + 1; });
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+  const base = rewardBase(), life = Object.keys(S.days).reduce((a, k) => a + total(k), 0);
+  const daysWritten = Object.keys(S.days).filter(k => total(k) > 0).length;
+  const best = Object.keys(S.days).filter(k => total(k) > 0).sort((a, b) => total(b) - total(a))[0];
+  const pages = Math.round(life / 250);
+  $("#portraitBody").innerHTML = `
+    <p><b class="num" style="font-size:26px">${fmt(life)}</b> words so far. That's about <b class="num">${fmt(pages)}</b> paperback pages, written over <b class="num">${daysWritten}</b> ${daysWritten === 1 ? "day" : "days"}.</p>
+    ${best ? `<p>Your biggest day was <b>${parseDay(best).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</b>, with <b class="num">${fmt(total(best))}</b> words.</p>` : ""}
+    <div><h3>Words you keep coming back to</h3><p class="soft" style="font-size:13px;margin-bottom:8px">From the notes on this page. Counted in your browser; nothing is sent anywhere.</p>
+    <div class="words">${top.length ? top.map(([w, n]) => `<span>${esc(w)} <small class="soft num">${n}</small></span>`).join("") : `<p class="soft">Write here on the Write page and your words show up.</p>`}</div></div>
+    <p class="soft" style="font-size:14px">Next unlock: <b>${base >= 25000 ? "Something special at 50,000" : "A letter from Inky at 25,000"}</b>.</p>`;
+  $("#portraitModal").hidden = false;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-close]"); if (b) $("#" + b.dataset.close).hidden = true; });
+
+// ---- Keep notes safe: install + backup nudges ----
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; renderNudges(); });
+window.addEventListener("appinstalled", () => { installEvt = null; S.dismiss.install = Date.now() + 3650 * 864e5; save(); renderNudges(); toast("Installed. Open Inkstreak from your Home Screen."); });
+const standalone = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } };
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isTouch = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
+const hasWords = () => Object.keys(S.days).some(k => total(k) > 0);
+const snoozed = k => (S.dismiss[k] || 0) > Date.now();
+function renderNudges() {
+  const box = $("#nudges"); if (!box) return;
+  let html = "";
+  if (hasWords() && !standalone() && !snoozed("install") && (isIOS() || isTouch() || installEvt)) {
+    const how = installEvt ? "Install it and it opens like an app, with your notes kept safe."
+      : isIOS() ? "On iPhone, Safari can clear websites you don't open for a week. Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>. Your notes stay and it opens like an app."
+      : "Open your browser menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>. It opens like an app and your notes stay put.";
+    html = `<div class="nudge"><p><b>Keep your notes safe.</b> ${how}</p><div class="acts">${installEvt ? `<button class="btn small primary" type="button" data-nudge="install">Install</button>` : ""}<button class="btn small ghost" type="button" data-nudge="later-install">Later</button></div></div>`;
+  } else if (hasWords() && Date.now() - (S.lastBackup || S.firstUse) > 7 * 864e5 && !snoozed("backup")) {
+    html = `<div class="nudge warn"><p><b>Back up this week's writing.</b> Your notes live only in this browser. A backup file lets you get them back if it's ever cleared.</p><div class="acts"><button class="btn small primary" type="button" data-nudge="backup">Download backup</button><button class="btn small" type="button" data-nudge="copy">Copy backup</button><button class="btn small ghost" type="button" data-nudge="later-backup">Later</button></div></div>`;
+  }
+  if (box.innerHTML !== html) box.innerHTML = html;
+}
+$("#nudges").addEventListener("click", async e => {
+  const b = e.target.closest("[data-nudge]"); if (!b) return;
+  const a = b.dataset.nudge;
+  if (a === "install" && installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (err) {} installEvt = null; }
+  if (a === "later-install") S.dismiss.install = Date.now() + 3 * 864e5;
+  if (a === "later-backup") S.dismiss.backup = Date.now() + 2 * 864e5;
+  if (a === "backup") $("#expJson").click();
+  if (a === "copy") $("#copyJson").click();
+  save(); renderNudges();
+});
+function renderProtect() {
+  const el = $("#protect"); if (!el) return;
+  el.textContent = standalone() ? "Installed on this device, so the browser won't clear it on its own."
+    : S.persisted ? "This browser has agreed not to clear your notes on its own. Clearing site data yourself still deletes them."
+    : isIOS() ? "Tip: add this page to your Home Screen. Safari can clear sites you haven't opened in 7 days, but not Home Screen apps."
+    : "Tip: install this page as an app from your browser menu so it isn't cleared automatically.";
+  el.insertAdjacentHTML("beforeend", S.lastBackup ? ` Last backup: ${new Date(S.lastBackup).toLocaleDateString(undefined, { day: "numeric", month: "short" })}.` : " No backup yet.");
+}
 
 // ---- Start ----
 renderApp(); ensureNote(); openNote(S.activeId); renderSprint(); renderSaved(); route();
