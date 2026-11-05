@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Free writing tracker: live word count, daily goal, streak with a rest day, November 50k challenge, writing sprints and share cards. Your words stay in your browser.">
+<meta name="theme-color" content="#4FC31A">
+<link rel="canonical" href="https://inkstreak.app/write/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inkstreak">
+<meta property="og:title" content="Inkstreak Web: free word count and streak tracker">
+<meta property="og:description" content="Track your daily words, keep a streak and finish your November novel. No account needed.">
+<meta property="og:image" content="https://inkstreak.app/write/og.png">
+<meta property="og:url" content="https://inkstreak.app/write/">
+<meta name="twitter:card" content="summary_large_image">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Inkstreak Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: sticky stat bar on top; three views (Write, Progress, Get the app) switched by hash. Write = editor + notes rail. */
+:root{
+  --bg:#F5F7F2; --card:#FFFFFF; --paper:#FFFFFF; --ink:#2C322E; --soft:#727A74; --line:#E1E6DD;
+  --green:#4FC31A; --green-d:#3E9C12; --green-t:#EAF7E1; --orange:#FF9600; --orange-d:#D97F00; --blue:#22AEEF; --red:#E5484D;
+  --l1:#D5EFC4; --l2:#A8DE86; --l3:#78CB49; --l4:#4FC31A;
+  --ui:"Nunito",ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Literata",Georgia,"Times New Roman",serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111512; --card:#191F1A; --paper:#161B17; --ink:#E9EEE7; --soft:#99A39B; --line:#2B342D;
+  --green:#58CC22; --green-d:#3A8F14; --green-t:#1D2E17; --orange:#FF9F1A; --orange-d:#B86E00; --blue:#3BB8F2; --red:#FF6B6F;
+  --l1:#22371B; --l2:#2F5A1E; --l3:#3F8A1D; --l4:#58CC22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111512; --card:#191F1A; --paper:#161B17; --ink:#E9EEE7; --soft:#99A39B; --line:#2B342D;
+  --green:#58CC22; --green-d:#3A8F14; --green-t:#1D2E17; --orange:#FF9F1A; --orange-d:#B86E00; --blue:#3BB8F2; --red:#FF6B6F;
+  --l1:#22371B; --l2:#2F5A1E; --l3:#3F8A1D; --l4:#58CC22; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:600 15px/1.5 var(--ui);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--card)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1080px;margin:0 auto}
+h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:20px} h3{font-size:16px}
+p{margin:0}
+.soft{color:var(--soft)}
+.num{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+
+/* Header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);border-bottom:2px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:14px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:900;font-size:21px;letter-spacing:-.02em}
+.brand svg{width:26px;height:32px}
+nav{display:flex;gap:4px;margin-left:8px}
+nav a{padding:7px 12px;border-radius:12px;text-decoration:none;color:var(--soft);font-weight:800;font-size:14.5px}
+nav a[aria-current="page"]{background:var(--green-t);color:var(--green-d)}
+:root[data-theme="dark"] nav a[aria-current="page"]{color:var(--green)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav a[aria-current="page"]{color:var(--green)}}
+.chips{display:flex;gap:8px;margin-left:auto}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;border:2px solid var(--line);font-weight:900;font-size:14px;white-space:nowrap}
+.chip.hot{border-color:var(--orange);color:var(--orange)}
+@media (max-width:640px){
+  .hrow{gap:8px}
+  nav{order:3;width:100%;margin-left:0;justify-content:space-between}
+  nav a{flex:1;text-align:center}
+}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:800 14.5px var(--ui);padding:9px 15px;border-radius:14px;border:2px solid var(--line);background:var(--card);box-shadow:0 3px 0 var(--line);cursor:pointer;text-decoration:none;color:var(--ink);white-space:nowrap;transition:transform .05s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--green);border-color:var(--green-d);box-shadow:0 4px 0 var(--green-d);color:#fff}
+.btn.primary:active{box-shadow:0 2px 0 var(--green-d)}
+.btn.orange{background:var(--orange);border-color:var(--orange-d);box-shadow:0 4px 0 var(--orange-d);color:#fff}
+.btn.ghost{border-color:transparent;box-shadow:none;background:transparent;color:var(--soft)}
+.btn.danger{color:var(--red)}
+.btn.small{padding:6px 11px;font-size:13.5px;border-radius:12px}
+.btn[disabled]{opacity:.5;cursor:default}
+input[type=text],input[type=email],input[type=number],input[type=date],select{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:8px 11px;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none}
+
+main{padding-block:20px 60px}
+.view[hidden]{display:none!important}
+.card{background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:18px}
+.stack{display:grid;gap:16px}
+
+/* Today strip */
+.today{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;margin-bottom:16px}
+.today .big{font-size:30px;font-weight:900;line-height:1.1}
+.bar{height:14px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar > i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .3s}
+.logbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.logbox input{width:110px}
+@media (max-width:640px){.today{grid-template-columns:1fr}}
+
+/* Write view */
+.write{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.write{grid-template-columns:1fr}.rail{order:2}}
+.rail{display:grid;gap:10px}
+.rail .top{display:flex;gap:8px}
+.rail .top input{flex:1;width:100%}
+.notes{display:grid;gap:6px;max-height:60vh;overflow:auto;padding:2px}
+.note-i{text-align:left;width:100%;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;display:grid;gap:2px}
+.note-i[aria-current="true"]{border-color:var(--green);background:var(--green-t)}
+.note-i b{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-i span{font-size:12.5px;color:var(--soft)}
+.editor{background:var(--paper);border:2px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-height:62vh}
+.ed-top{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.ed-top input{flex:1;min-width:140px;border:none;background:transparent;font:600 22px var(--serif);padding:4px 2px}
+.ed-top select{font-size:13.5px;padding:6px 8px}
+textarea#body{flex:1;resize:none;border:none;background:transparent;font:400 19px/1.75 var(--serif);padding:18px 20px;min-height:44vh}
+.ed-foot{display:flex;gap:10px;align-items:center;padding:10px 14px;border-top:2px solid var(--line);flex-wrap:wrap;font-size:13.5px}
+.ed-foot .grow{flex:1}
+.sprint{display:flex;gap:6px;align-items:center}
+.sprint-live{font-weight:900;color:var(--orange)}
+.confirm{color:var(--red)!important}
+
+/* Focus mode */
+body.focus header,body.focus .today,body.focus .rail,body.focus .ed-top select,body.focus #delNote{display:none!important}
+body.focus .write{grid-template-columns:1fr}
+body.focus .editor{max-width:760px;margin:0 auto;width:100%;border-color:transparent;min-height:88vh}
+body.focus textarea#body{font-size:21px;line-height:1.85}
+body.focus main{padding-block:8px}
+
+/* Progress */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.kv{display:flex;gap:22px;flex-wrap:wrap;margin-top:10px}
+.kv div{display:grid}
+.kv b{font-size:24px;font-weight:900;line-height:1.1}
+.kv span{font-size:12.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:14px}
+.cal .dow{font-size:11px;text-align:center;color:var(--soft);font-weight:800;letter-spacing:.05em}
+.cal .c{aspect-ratio:1;max-width:100%;border-radius:9px;background:var(--bg);border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--soft)}
+.cal .c.l1{background:var(--l1);border-color:var(--l1)} .cal .c.l2{background:var(--l2);border-color:var(--l2)}
+.cal .c.l3{background:var(--l3);border-color:var(--l3);color:#fff} .cal .c.l4{background:var(--l4);border-color:var(--green-d);color:#fff}
+.cal .c.today{outline:3px solid var(--orange);outline-offset:1px}
+.cal .c.future{opacity:.45}
+.cal .c.blank{visibility:hidden}
+.chart{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:6px;align-items:end;height:150px;margin-top:16px;position:relative;border-bottom:2px solid var(--line)}
+.chart .col{display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0}
+.chart .col i{display:block;background:var(--green);border-radius:6px 6px 2px 2px;min-height:2px}
+.chart .col i.zero{background:var(--line)}
+.chart .col.t i{background:var(--orange)}
+.chart .goal{position:absolute;left:0;right:0;border-top:2px dashed var(--soft);opacity:.5}
+.chart-x{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:6px;font-size:11px;color:var(--soft);text-align:center;font-weight:800;margin-top:4px}
+.logs{display:grid;gap:6px;margin-top:10px;max-height:240px;overflow:auto}
+.logs .li{display:flex;gap:10px;align-items:center;font-size:14px;border-bottom:1px solid var(--line);padding-block:6px}
+.logs .li .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.form{display:grid;gap:10px;margin-top:12px}
+.form .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.form label{font-size:13px;font-weight:800;color:var(--soft);display:grid;gap:4px}
+.toggle{display:flex;gap:8px;align-items:center;font-weight:700}
+.toggle input{width:20px;height:20px;accent-color:var(--green)}
+
+/* Get the app */
+.hero-app{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.hero-app svg{width:84px;height:104px}
+@media (max-width:560px){.hero-app{grid-template-columns:1fr}}
+.pill{display:inline-block;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:999px;background:var(--green-t);color:var(--green-d)}
+.pill.wait{background:var(--orange);color:#fff}
+.feat{display:grid;gap:8px;margin-top:12px;padding:0;list-style:none}
+.feat li{display:flex;gap:10px}
+.feat li::before{content:"✓";color:var(--green);font-weight:900}
+.msg{font-size:14px;font-weight:700;margin-top:6px}
+.msg.ok{color:var(--green-d)} .msg.err{color:var(--red)}
+.copyline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.copyline code{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:4px 8px;font-size:13.5px;user-select:all}
+
+/* Modal + toast */
+.modal{position:fixed;inset:0;background:rgba(10,14,11,.55);z-index:50;display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--card);border-radius:20px;padding:18px;max-width:440px;width:100%;max-height:90vh;overflow:auto;display:grid;gap:12px}
+.sheet img{width:100%;border-radius:14px;border:2px solid var(--line)}
+.seg{display:flex;gap:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;max-width:calc(100% - 32px);text-align:center}
+footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="inky" viewBox="0 0 100 124">
+    <path d="M50 6 C60 34 98 48 98 76 A48 41 0 0 1 2 76 C2 48 40 34 50 6Z" fill="#1A8FC7" transform="translate(0,4)"/>
+    <path d="M50 6 C60 34 98 48 98 76 A48 41 0 0 1 2 76 C2 48 40 34 50 6Z" fill="#22AEEF"/>
+    <ellipse cx="35" cy="58" rx="7" ry="11" fill="rgba(255,255,255,.32)"/>
+    <circle cx="38" cy="80" r="11" fill="#fff"/><circle cx="62" cy="80" r="11" fill="#fff"/>
+    <circle cx="40" cy="82" r="5.6" fill="#1D1D1D"/><circle cx="64" cy="82" r="5.6" fill="#1D1D1D"/>
+    <path d="M40 99 Q50 107 60 99" stroke="#1D1D1D" stroke-width="4.8" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<header>
+  <div class="gut"><div class="inner hrow">
+    <a class="brand" href="#write"><svg><use href="#inky"/></svg>inkstreak</a>
+    <nav aria-label="Sections">
+      <a href="#write" data-view="write">Write</a>
+      <a href="#progress" data-view="progress">Progress</a>
+      <a href="#get-app" data-view="get-app">Get the app</a>
+    </nav>
+    <div class="chips">
+      <span class="chip num" title="Words today"><span aria-hidden="true">✍️</span><span id="hWords">0</span></span>
+      <span class="chip hot num" title="Streak"><span aria-hidden="true">🔥</span><span id="hStreak">0</span></span>
+    </div>
+  </div></div>
+</header>
+
+<main class="gut"><div class="inner">
+
+  <!-- WRITE -->
+  <section class="view" id="v-write">
+    <div class="card today">
+      <div>
+        <div class="big num"><span id="tWords">0</span> <span class="soft" style="font-size:18px;font-weight:800">of <span id="tGoal">1,667</span> words today</span></div>
+        <div class="bar" role="progressbar" aria-label="Today's goal" aria-valuemin="0" aria-valuemax="100" id="tBarWrap"><i id="tBar" style="width:0%"></i></div>
+        <p class="soft" id="tNote" style="margin-top:6px;font-size:13.5px"></p>
+      </div>
+      <form class="logbox" id="logForm" autocomplete="off">
+        <label for="logN" class="soft" style="font-size:13px;font-weight:800">Wrote somewhere else?</label>
+        <input id="logN" type="number" inputmode="numeric" min="1" max="100000" placeholder="Words">
+        <button class="btn primary" type="submit">Log words</button>
+      </form>
+    </div>
+
+    <div class="write">
+      <aside class="rail" aria-label="Notes">
+        <div class="top">
+          <input id="search" type="text" placeholder="Search notes" aria-label="Search notes">
+          <button class="btn primary" id="newNote" type="button" aria-label="New note">+ New</button>
+        </div>
+        <div class="notes" id="notes"></div>
+      </aside>
+
+      <div class="editor">
+        <div class="ed-top">
+          <input id="title" type="text" placeholder="Untitled" aria-label="Note title">
+          <select id="tag" aria-label="Category">
+            <option value="">No category</option><option>Novel</option><option>Journal</option><option>Blog</option><option>Poetry</option><option>Work</option><option>Other</option>
+          </select>
+        </div>
+        <textarea id="body" placeholder="Start writing. Every word you type here counts." aria-label="Note text" spellcheck="true"></textarea>
+        <div class="ed-foot">
+          <span class="num"><b id="noteWc">0</b> words in this note</span>
+          <span class="grow soft" id="saved">Saved in this browser</span>
+          <div class="sprint" id="sprintBox"></div>
+          <button class="btn small" id="focusBtn" type="button">Focus</button>
+          <button class="btn small ghost danger" id="delNote" type="button">Delete</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section class="view stack" id="v-progress" hidden>
+    <div class="grid2">
+      <div class="card" id="chCard"></div>
+      <div class="card">
+        <h2>Streak</h2>
+        <div class="kv">
+          <div><b class="num" id="sNow">0</b><span>days now</span></div>
+          <div><b class="num" id="sBest">0</b><span>best</span></div>
+        </div>
+        <p class="soft" id="sRest" style="margin-top:10px;font-size:14px"></p>
+        <h3 style="margin-top:18px">Last 14 days</h3>
+        <div class="chart" id="chart" aria-label="Words per day, last 14 days"></div>
+        <div class="chart-x" id="chartX"></div>
+        <div class="row" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn orange" id="shareBtn" type="button">Make a share card</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Logged words</h2>
+        <p class="soft" style="font-size:14px">Words you wrote in other apps or on paper.</p>
+        <div class="logs" id="logs"></div>
+      </div>
+      <div class="card">
+        <h2>Settings</h2>
+        <form class="form" id="setForm" autocomplete="off">
+          <label for="goal">Daily goal (words)<input id="goal" type="number" min="1" max="100000" inputmode="numeric"></label>
+          <label class="toggle"><input id="rest" type="checkbox"> Rest day: one missed day a week keeps your streak</label>
+          <h3 style="margin-top:6px">Challenge</h3>
+          <div class="row">
+            <button class="btn small" type="button" id="preNov">November 50k</button>
+            <button class="btn small" type="button" id="pre30">30 days from today</button>
+            <button class="btn small ghost" type="button" id="preOff">No challenge</button>
+          </div>
+          <div class="row" id="chFields">
+            <label for="chName">Name<input id="chName" type="text" maxlength="40"></label>
+            <label for="chTarget">Target words<input id="chTarget" type="number" min="1" inputmode="numeric" style="width:120px"></label>
+            <label for="chStart">Starts<input id="chStart" type="date"></label>
+            <label for="chDays">Days<input id="chDays" type="number" min="1" max="366" style="width:80px"></label>
+          </div>
+          <div class="row"><button class="btn primary" type="submit">Save settings</button><span class="msg ok" id="setMsg"></span></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your data</h2>
+      <p class="soft" style="font-size:14px;max-width:65ch">Everything stays in this browser on this device. Nothing is sent to us. Clearing your browser data deletes it, so download a backup now and then. You can load the backup on another computer or phone.</p>
+      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn" id="expJson" type="button">Download backup</button>
+        <button class="btn" id="expTxt" type="button">Download notes as text</button>
+        <button class="btn" id="copyJson" type="button">Copy backup</button>
+        <label class="btn" for="impFile" style="cursor:pointer">Load a backup</label>
+        <input id="impFile" type="file" accept=".json,application/json" hidden>
+      </div>
+      <p class="msg" id="dataMsg"></p>
+    </div>
+  </section>
+
+  <!-- GET THE APP -->
+  <section class="view stack" id="v-get-app" hidden>
+    <div class="card hero-app">
+      <svg><use href="#inky"/></svg>
+      <div>
+        <h1 style="font-size:28px">Count every word you write, in every app</h1>
+        <p class="soft" style="margin-top:6px;max-width:60ch">This page counts what you write here. The Inkstreak app adds its own keyboard, so words you type in WhatsApp, Gmail, Notes and almost any other app count too. It stores only the numbers, never your text.</p>
+        <ul class="feat">
+          <li>Live word count and streak right on the keyboard</li>
+          <li>Voice notes from the Lock Screen</li>
+          <li>Home Screen widgets and share cards</li>
+          <li>Streak buddies who keep you writing</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <span class="pill wait" id="iosPill">In App Store review</span>
+        <h2 style="margin-top:8px">iPhone</h2>
+        <div id="iosBody"></div>
+      </div>
+      <div class="card">
+        <span class="pill">Beta testers wanted</span>
+        <h2 style="margin-top:8px">Android</h2>
+        <p class="soft" style="font-size:14px">Join the first 50 testers. Use the Gmail address signed in to the Play Store on your Android phone, because Google sends the test invite there.</p>
+        <form class="form" id="andForm" autocomplete="on">
+          <div class="row"><input id="andEmail" type="email" placeholder="you@gmail.com" required style="flex:1" aria-label="Gmail address"><button class="btn primary" type="submit">Join the beta</button></div>
+          <p class="msg" id="andMsg" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your notes, everywhere</h2>
+      <p class="soft" style="font-size:14px;max-width:65ch;margin-top:4px">When the apps are out, you'll be able to export your Inkstreak notes and word counts from your phone and load them here with <b>Load a backup</b> on the Progress page. Your writing history stays in one place, and it still never touches our servers.</p>
+    </div>
+  </section>
+
+  <footer>Inkstreak · your words stay in your browser · <span id="supportLine"></span></footer>
+</div></main>
+
+<div class="modal" id="shareModal" hidden role="dialog" aria-modal="true" aria-labelledby="shareH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="shareH" style="flex:1">Share card</h2><button class="btn small ghost" id="shareClose" type="button">Close</button></div>
+    <div class="seg"><button class="btn small" data-size="post" type="button">Post</button><button class="btn small" data-size="story" type="button">Story</button></div>
+    <img id="shareImg" alt="Your writing card">
+    <p class="soft" style="font-size:13px">Press and hold (or right-click) the image to save it if the buttons don't work in your browser.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="shareDl" type="button">Download</button><button class="btn" id="shareNative" type="button" hidden>Share</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+// ---- Settings you edit (see README) ----
+const CONFIG = {
+  FORM_ENDPOINT: "https://formsubmit.co/ajax/support@inkstreak.app",   // sign-ups are emailed here (FormSubmit). Formspree links work too.
+  APP_STORE_URL: "",   // paste the App Store link once Inkstreak is live
+  SUPPORT: "support@inkstreak.app"
+};
+const KEY = "inkstreak.web.v1";
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, "0");
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseDay = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const diffDays = (a, b) => Math.round((parseDay(dayKey(a)) - parseDay(dayKey(b))) / 864e5);
+const weekKey = d => dayKey(addDays(d, -((d.getDay()+6) % 7)));
+const wc = s => (String(s || "").match(/\S+/g) || []).length;
+const fmt = n => Math.round(n).toLocaleString();
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const WELCOME = "This is your page. Every word you type here counts toward today's words and your streak.\n\nWrote somewhere else today, in another app or on paper? Use Log words at the top to add it.\n\nYour notes stay in this browser. Nothing is sent anywhere. Download a backup from Progress now and then.\n\nDelete this note whenever you like and start your own.";
+
+function fresh() {
+  const now = Date.now(), t = new Date();
+  return {
+    version: 1, source: "web", deviceId: uuid(),
+    settings: { goal: 1667, restDays: true, best: 0,
+      challenge: t.getMonth() === 10 ? { name: "November novel", target: 50000, start: `${t.getFullYear()}-11-01`, days: 30 } : null },
+    days: {}, logs: [], signups: {},
+    notes: [{ id: uuid(), title: "Start here", body: WELCOME, tag: "", createdAt: now, updatedAt: now, deleted: false }],
+    activeId: null
+  };
+}
+function normalize(s) {
+  const f = fresh();
+  if (!s || typeof s !== "object") return f;
+  s.settings = Object.assign({}, f.settings, s.settings || {});
+  s.days = s.days && typeof s.days === "object" ? s.days : {};
+  s.logs = Array.isArray(s.logs) ? s.logs : [];
+  s.notes = Array.isArray(s.notes) ? s.notes : [];
+  s.signups = s.signups || {};
+  s.deviceId = s.deviceId || f.deviceId;
+  s.version = 1; s.source = "web";
+  return s;
+}
+let storageOK = true;
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) return normalize(JSON.parse(r)); }
+  catch (e) { storageOK = false; }
+  return fresh();
+}
+let S = load();
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
+    renderSaved();
+  }, 250);
+}
+
+// ---- Words per day ----
+const day = k => S.days[k] || (S.days[k] = { typed: 0, logged: 0 });
+const total = k => { const d = S.days[k]; return d ? (+d.typed || 0) + (+d.logged || 0) : 0; };
+let sprint = null;
+function addTyped(n) {
+  const d = day(dayKey()); d.typed = (+d.typed || 0) + n; d.updatedAt = Date.now();
+  if (sprint) sprint.words += n;
+  save(); renderCounts();
+}
+
+function streakInfo() {
+  const today = new Date();
+  const keys = Object.keys(S.days).filter(k => total(k) > 0).sort();
+  if (!keys.length) return { count: 0, restThisWeek: false, wroteToday: false };
+  const first = parseDay(keys[0]);
+  const used = new Set();
+  const wroteToday = total(dayKey(today)) > 0;
+  let count = wroteToday ? 1 : 0, d = addDays(today, -1), guard = 0;
+  while (d >= first && guard++ < 5000) {
+    if (total(dayKey(d)) > 0) count++;
+    else if (S.settings.restDays && !used.has(weekKey(d))) used.add(weekKey(d));
+    else break;
+    d = addDays(d, -1);
+  }
+  if (count > (S.settings.best || 0)) { S.settings.best = count; save(); }
+  return { count, restThisWeek: used.has(weekKey(today)), wroteToday };
+}
+
+function chInfo() {
+  const c = S.settings.challenge;
+  if (!c || !c.start) return null;
+  const start = parseDay(c.start), idx = diffDays(new Date(), start) + 1;
+  let sum = 0; const cells = [];
+  for (let i = 0; i < c.days; i++) { const k = dayKey(addDays(start, i)); const w = total(k); sum += w; cells.push({ k, w, i }); }
+  const daily = c.target / c.days;
+  const doneDays = Math.min(Math.max(idx - 1, 0), c.days);
+  const remainingDays = c.days - doneDays;
+  const left = Math.max(0, c.target - sum);
+  const need = remainingDays > 0 ? Math.ceil(left / remainingDays) : 0;
+  const elapsed = Math.min(Math.max(idx, 0), c.days);
+  const avg = elapsed > 0 ? sum / elapsed : 0;
+  const proj = avg > 0 ? addDays(start, Math.ceil(c.target / avg) - 1) : null;
+  const status = idx < 1 ? "before" : idx > c.days ? "after" : "on";
+  return { ...c, start, idx, sum, cells, daily, need, left, avg, proj, status };
+}
+
+// ---- Rendering ----
+const views = ["write", "progress", "get-app"];
+function route() {
+  let v = (location.hash || "#write").slice(1);
+  if (!views.includes(v)) v = "write";
+  views.forEach(x => { $("#v-" + x).hidden = x !== v; });
+  document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+  if (v === "progress") renderProgress();
+}
+function renderCounts() {
+  const t = total(dayKey()), g = +S.settings.goal || 1667, st = streakInfo();
+  $("#hWords").textContent = fmt(t); $("#hStreak").textContent = st.count;
+  $("#tWords").textContent = fmt(t); $("#tGoal").textContent = fmt(g);
+  const pct = Math.min(100, t / g * 100);
+  $("#tBar").style.width = pct + "%"; $("#tBarWrap").setAttribute("aria-valuenow", Math.round(pct));
+  const c = chInfo();
+  let note = t >= g ? "Goal done for today. Anything more is a bonus." : `${fmt(g - t)} words to go.`;
+  if (c && c.status === "on") note += ` ${c.name}: day ${c.idx} of ${c.days}, ${fmt(c.sum)} of ${fmt(c.target)}.`;
+  if (!st.wroteToday && st.count > 0) note += " Write a little today to keep your streak.";
+  $("#tNote").textContent = note;
+  const n = activeNote(); if (n) $("#noteWc").textContent = fmt(wc(n.body));
+  renderSprint();
+}
+function renderSaved() {
+  $("#saved").textContent = storageOK ? "Saved in this browser" : "Not saved: this browser blocks storage. Copy your text somewhere safe.";
+  $("#saved").style.color = storageOK ? "" : "var(--red)";
+}
+
+const liveNotes = () => S.notes.filter(n => !n.deleted).sort((a, b) => b.updatedAt - a.updatedAt);
+const activeNote = () => S.notes.find(n => n.id === S.activeId && !n.deleted);
+const noteTitle = n => (n.title || "").trim() || (n.body || "").trim().split("\n")[0].slice(0, 60) || "Untitled";
+function renderNotes() {
+  const q = $("#search").value.trim().toLowerCase();
+  const list = liveNotes().filter(n => !q || (n.title + " " + n.body + " " + n.tag).toLowerCase().includes(q));
+  $("#notes").innerHTML = list.length ? list.map(n => `<button class="note-i" type="button" data-id="${n.id}" aria-current="${n.id === S.activeId}"><b>${esc(noteTitle(n))}</b><span class="num">${fmt(wc(n.body))} words · ${esc(n.tag || "")}${n.tag ? " · " : ""}${new Date(n.updatedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span></button>`).join("")
+    : `<p class="soft" style="font-size:14px;padding:6px">${q ? "No notes match." : "No notes yet."}</p>`;
+}
+let lastWc = 0;
+function openNote(id) {
+  S.activeId = id; const n = activeNote();
+  $("#title").value = n ? n.title : ""; $("#body").value = n ? n.body : ""; $("#tag").value = n ? n.tag || "" : "";
+  lastWc = wc(n ? n.body : "");
+  renderNotes(); renderCounts(); save();
+}
+function newNote() {
+  const now = Date.now(), n = { id: uuid(), title: "", body: "", tag: "", createdAt: now, updatedAt: now, deleted: false };
+  S.notes.push(n); openNote(n.id); $("#body").focus();
+}
+function ensureNote() { if (!activeNote()) { const l = liveNotes(); l.length ? openNote(l[0].id) : newNote(); } }
+
+function renderSprint() {
+  const box = $("#sprintBox");
+  if (sprint) {
+    const ms = Math.max(0, sprint.end - Date.now()), m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60;
+    const html = `<span class="sprint-live num">${m}:${pad(s)} · ${fmt(sprint.words)} words</span><button class="btn small ghost" type="button" data-sprint="stop">Stop</button>`;
+    if (box.dataset.mode !== "live") { box.dataset.mode = "live"; box.innerHTML = html; }
+    else box.querySelector(".sprint-live").textContent = `${m}:${pad(s)} · ${fmt(sprint.words)} words`;
+  } else if (box.dataset.mode !== "idle") {
+    box.dataset.mode = "idle";
+    box.innerHTML = `<span class="soft">Sprint</span><button class="btn small" type="button" data-sprint="15">15 min</button><button class="btn small" type="button" data-sprint="25">25 min</button>`;
+  }
+}
+function tick() {
+  if (!sprint) return;
+  if (Date.now() >= sprint.end) { toast(`Sprint done: ${fmt(sprint.words)} words in ${sprint.min} minutes.`); sprint = null; renderSprint(); return; }
+  renderSprint(); setTimeout(tick, 500);
+}
+
+function renderProgress() {
+  const st = streakInfo();
+  $("#sNow").textContent = st.count; $("#sBest").textContent = Math.max(S.settings.best || 0, st.count);
+  $("#sRest").textContent = !S.settings.restDays ? "Rest days are off. Every day counts." :
+    st.restThisWeek ? "You've used this week's rest day. Write today to keep going." : "One rest day left this week. Miss a day and your streak still holds.";
+
+  // 14-day chart
+  const g = +S.settings.goal || 1667, days = [];
+  for (let i = 13; i >= 0; i--) { const d = addDays(new Date(), -i); days.push({ d, w: total(dayKey(d)) }); }
+  const max = Math.max(g, ...days.map(x => x.w)) * 1.08;
+  $("#chart").innerHTML = days.map((x, i) => `<div class="col${i === 13 ? " t" : ""}" title="${x.d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}: ${fmt(x.w)} words"><i class="${x.w ? "" : "zero"}" style="height:${x.w ? Math.max(3, x.w / max * 100) : 1.5}%"></i></div>`).join("")
+    + `<div class="goal" style="bottom:${g / max * 100}%" title="Goal ${fmt(g)}"></div>`;
+  $("#chartX").innerHTML = days.map(x => `<span>${x.d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>`).join("");
+
+  // Challenge
+  const c = chInfo(), el = $("#chCard");
+  if (!c) el.innerHTML = `<h2>Challenge</h2><p class="soft" style="margin-top:6px">No challenge set. Pick <b>November 50k</b> or <b>30 days from today</b> in Settings below.</p>`;
+  else {
+    const pct = Math.min(100, c.sum / c.target * 100);
+    const off = (c.start.getDay() + 6) % 7;
+    const todayK = dayKey();
+    const cells = Array.from({ length: off }, () => `<div class="c blank"></div>`).join("") + c.cells.map(x => {
+      const r = x.w / c.daily, lvl = !x.w ? "" : r >= 1 ? "l4" : r >= .6 ? "l3" : r >= .3 ? "l2" : "l1";
+      const fut = x.k > todayK ? " future" : "", td = x.k === todayK ? " today" : "";
+      return `<div class="c ${lvl}${fut}${td}" title="${x.k}: ${fmt(x.w)} words">${parseDay(x.k).getDate()}</div>`;
+    }).join("");
+    const head = c.status === "before" ? `Starts ${c.start.toLocaleDateString(undefined, { day: "numeric", month: "long" })}` :
+      c.status === "after" ? (c.sum >= c.target ? "Finished. You did it." : "Challenge over") : `Day ${c.idx} of ${c.days}`;
+    const tip = c.sum >= c.target ? `You passed ${fmt(c.target)} words.` : c.status === "after" ? `You wrote ${fmt(c.sum)} words. That's a lot more than zero.` :
+      `${fmt(c.need)} words a day finishes on time.` + (c.proj && c.status === "on" ? ` At your pace you'll reach ${fmt(c.target)} on ${c.proj.toLocaleDateString(undefined, { day: "numeric", month: "short" })}.` : "");
+    el.innerHTML = `<h2>${esc(c.name || "Challenge")}</h2><p class="soft" style="font-weight:800">${head}</p>
+      <div class="kv"><div><b class="num">${fmt(c.sum)}</b><span>of ${fmt(c.target)}</span></div><div><b class="num">${Math.round(pct)}%</b><span>done</span></div><div><b class="num">${fmt(c.left)}</b><span>to go</span></div></div>
+      <div class="bar" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="Challenge progress"><i style="width:${pct}%"></i></div>
+      <p style="margin-top:10px;font-size:14px">${tip}</p>
+      <div class="cal">${["M","T","W","T","F","S","S"].map(d => `<div class="dow">${d}</div>`).join("")}${cells}</div>`;
+  }
+
+  // Logs
+  const logs = [...S.logs].sort((a, b) => b.createdAt - a.createdAt).slice(0, 60);
+  $("#logs").innerHTML = logs.length ? logs.map(l => `<div class="li"><b class="num">+${fmt(l.words)}</b><span class="grow soft">${parseDay(l.day).toLocaleDateString(undefined, { day: "numeric", month: "short" })}${l.note ? " · " + esc(l.note) : ""}</span><button class="btn small ghost danger" type="button" data-dellog="${l.id}">Remove</button></div>`).join("")
+    : `<p class="soft" style="font-size:14px">Nothing logged yet. Use <b>Log words</b> on the Write page.</p>`;
+
+  // Settings fields
+  const s = S.settings;
+  $("#goal").value = s.goal; $("#rest").checked = !!s.restDays;
+  const ch = s.challenge;
+  $("#chFields").hidden = !ch;
+  if (ch) { $("#chName").value = ch.name; $("#chTarget").value = ch.target; $("#chStart").value = ch.start; $("#chDays").value = ch.days; }
+}
+
+function renderApp() {
+  $("#supportLine").innerHTML = `help: <span style="user-select:all">${CONFIG.SUPPORT}</span>`;
+  const ios = $("#iosBody");
+  if (CONFIG.APP_STORE_URL) {
+    $("#iosPill").textContent = "Out now"; $("#iosPill").className = "pill";
+    ios.innerHTML = `<p class="soft" style="font-size:14px">Free 7-day trial, then Inkstreak Plus.</p><div style="margin-top:12px"><a class="btn primary" href="${esc(CONFIG.APP_STORE_URL)}" target="_blank" rel="noopener">Get it on the App Store</a></div>`;
+  } else {
+    ios.innerHTML = `<p class="soft" style="font-size:14px">Apple is reviewing Inkstreak now. Leave your email and we'll send one message the day it's live. No newsletter.</p>
+      <form class="form" id="iosForm" autocomplete="on"><div class="row"><input id="iosEmail" type="email" placeholder="you@email.com" required style="flex:1" aria-label="Email address"><button class="btn primary" type="submit">Tell me</button></div><p class="msg" id="iosMsg" aria-live="polite"></p></form>`;
+    $("#iosForm").addEventListener("submit", e => signup(e, "ios-launch", "#iosEmail", "#iosMsg"));
+  }
+}
+
+async function signup(e, list, inSel, msgSel) {
+  e.preventDefault();
+  const email = $(inSel).value.trim(), msg = $(msgSel);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.className = "msg err"; msg.textContent = "That email doesn't look right. Check it and try again."; return; }
+  const fallback = () => {
+    msg.className = "msg";
+    msg.innerHTML = `Sign-ups open here soon. For now, email us and we'll add you:<span class="copyline"><code>${CONFIG.SUPPORT}</code><button class="btn small" type="button" data-copy="${CONFIG.SUPPORT}">Copy</button></span><span class="soft" style="display:block;font-size:13px">Subject: ${list === "android-beta" ? "Android beta" : "iPhone launch"}</span>`;
+  };
+  if (!CONFIG.FORM_ENDPOINT) return fallback();
+  msg.className = "msg"; msg.textContent = "Sending…";
+  try {
+    const r = await fetch(CONFIG.FORM_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ email, list, _subject: `Inkstreak: ${list}`, lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json().catch(() => ({}));
+    if (j.success === false || j.success === "false") throw new Error("not active");
+    S.signups[list] = Date.now(); save();
+    msg.className = "msg ok";
+    msg.textContent = list === "android-beta" ? "You're on the list. Watch that Gmail inbox for the Play Store test invite." : "Done. We'll email you once, the day it's live.";
+    $(inSel).value = "";
+  } catch (err) { fallback(); }
+}
+
+// ---- Share card ----
+let cardSize = "post";
+function rr(ctx, x, y, w, h, r) { r = Math.min(r, h / 2, w / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function drawInky(ctx, x, y, s) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  const body = new Path2D("M50 6 C60 34 98 48 98 76 A48 41 0 0 1 2 76 C2 48 40 34 50 6Z");
+  ctx.save(); ctx.translate(0, 4); ctx.fillStyle = "#1A8FC7"; ctx.fill(body); ctx.restore();
+  ctx.fillStyle = "#22AEEF"; ctx.fill(body);
+  ctx.fillStyle = "#fff"; [[38, 80], [62, 80]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 11, 0, 7); ctx.fill(); });
+  ctx.fillStyle = "#1D1D1D"; [[40, 82], [64, 82]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, b, 5.6, 0, 7); ctx.fill(); });
+  ctx.strokeStyle = "#1D1D1D"; ctx.lineWidth = 4.8; ctx.lineCap = "round"; ctx.stroke(new Path2D("M40 99 Q50 107 60 99"));
+  ctx.restore();
+}
+async function makeCard() {
+  try { await Promise.all(["900 100px Nunito", "800 40px Nunito", "700 40px Nunito"].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1080, H = cardSize === "story" ? 1920 : 1350, k = H / 1350;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d"), F = "Nunito, system-ui, sans-serif";
+  const t = total(dayKey()), st = streakInfo(), c = chInfo();
+  ctx.fillStyle = "#4FC31A"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#fff"; rr(ctx, 60, 60, W - 120, H - 120, 56); ctx.fill();
+  let y = 120 * k;
+  drawInky(ctx, 110, y, 1.25);
+  ctx.fillStyle = "#2C322E"; ctx.font = `900 58px ${F}`; ctx.fillText("inkstreak", 260, y + 78);
+  ctx.fillStyle = "#727A74"; ctx.font = `700 34px ${F}`;
+  ctx.fillText(new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }), 260, y + 128);
+  y += 360 * k;
+  ctx.fillStyle = "#2C322E"; ctx.font = `900 ${t > 99999 ? 170 : 230}px ${F}`; ctx.fillText(fmt(t), 105, y);
+  y += 70 * k; ctx.fillStyle = "#727A74"; ctx.font = `800 50px ${F}`; ctx.fillText("words today", 112, y);
+  y += 60 * k;
+  ctx.font = `900 46px ${F}`; const sTxt = `🔥 ${st.count}-day streak`, sw = ctx.measureText(sTxt).width + 64;
+  ctx.fillStyle = "#FF9600"; rr(ctx, 110, y, sw, 86, 43); ctx.fill(); ctx.fillStyle = "#fff"; ctx.fillText(sTxt, 142, y + 59);
+  y += 150 * k;
+  if (c && c.status !== "before") {
+    ctx.fillStyle = "#2C322E"; ctx.font = `800 40px ${F}`;
+    ctx.fillText(`${c.name} · ${c.status === "on" ? `day ${c.idx} of ${c.days}` : "finished"}`, 112, y);
+    y += 30;
+    ctx.fillStyle = "#EAF0E6"; rr(ctx, 110, y, W - 220, 40, 20); ctx.fill();
+    const p = Math.min(1, c.sum / c.target);
+    if (p > 0) { ctx.fillStyle = "#4FC31A"; rr(ctx, 110, y, Math.max(40, (W - 220) * p), 40, 20); ctx.fill(); }
+    y += 92; ctx.fillStyle = "#2C322E"; ctx.font = `900 46px ${F}`; ctx.fillText(`${fmt(c.sum)} / ${fmt(c.target)} words`, 112, y);
+    y += 70 * k;
+  }
+  // last 7 days bars
+  const bx = 112, bw = W - 224, bh = 190 * k, base = Math.min(y + bh + 40, H - 230);
+  const d7 = []; for (let i = 6; i >= 0; i--) { const d = addDays(new Date(), -i); d7.push({ d, w: total(dayKey(d)) }); }
+  const mx = Math.max(1, ...d7.map(x => x.w)), colW = bw / 7;
+  d7.forEach((x, i) => {
+    const h = x.w ? Math.max(14, x.w / mx * bh) : 8;
+    ctx.fillStyle = i === 6 ? "#FF9600" : x.w ? "#4FC31A" : "#E1E6DD";
+    rr(ctx, bx + i * colW + 14, base - h, colW - 28, h, 12); ctx.fill();
+    ctx.fillStyle = "#727A74"; ctx.font = `800 30px ${F}`; ctx.textAlign = "center";
+    ctx.fillText(x.d.toLocaleDateString(undefined, { weekday: "narrow" }), bx + i * colW + colW / 2, base + 44); ctx.textAlign = "left";
+  });
+  ctx.textAlign = "center"; ctx.fillStyle = "#3E9C12"; ctx.font = `900 44px ${F}`; ctx.fillText("inkstreak.app", W / 2, H - 120);
+  ctx.textAlign = "left";
+  return cv;
+}
+let cardCanvas = null;
+async function openShare() {
+  $("#shareModal").hidden = false;
+  document.querySelectorAll("[data-size]").forEach(b => b.classList.toggle("primary", b.dataset.size === cardSize));
+  cardCanvas = await makeCard();
+  $("#shareImg").src = cardCanvas.toDataURL("image/png");
+  cardCanvas.toBlob(b => {
+    const f = b && new File([b], "inkstreak.png", { type: "image/png" });
+    $("#shareNative").hidden = !(f && navigator.canShare && navigator.canShare({ files: [f] }));
+    $("#shareNative").onclick = () => navigator.share({ files: [f], text: "My writing today on Inkstreak · inkstreak.app" }).catch(() => {});
+  });
+}
+
+// ---- Files ----
+function download(name, text, type) {
+  try {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  } catch (e) { toast("Your browser blocked the download. Use Copy backup instead."); }
+}
+function exportObj() { return { format: "inkstreak-backup", version: 1, source: "web", exportedAt: new Date().toISOString(), deviceId: S.deviceId, settings: S.settings, days: S.days, logs: S.logs, notes: S.notes }; }
+function cleanNote(x) {
+  return { id: String(x.id), title: String(x.title || ""), body: String(x.body || x.text || ""), tag: String(x.tag || x.category || ""),
+    createdAt: +x.createdAt || Date.parse(x.createdAt) || Date.now(), updatedAt: +x.updatedAt || Date.parse(x.updatedAt) || Date.now(), deleted: !!x.deleted };
+}
+function merge(inc) {
+  if (!inc || typeof inc !== "object" || (!inc.days && !inc.notes)) throw new Error("not a backup");
+  let notes = 0, dayCount = 0;
+  (Array.isArray(inc.notes) ? inc.notes : []).forEach(x => {
+    if (!x || !x.id) return;
+    const n = cleanNote(x), m = S.notes.find(y => y.id === n.id);
+    if (!m) { S.notes.push(n); notes++; } else if (n.updatedAt > (m.updatedAt || 0)) { Object.assign(m, n); notes++; }
+  });
+  let days = inc.days || {};
+  if (Array.isArray(days)) days = Object.fromEntries(days.filter(d => d && d.day).map(d => [d.day, d]));
+  Object.entries(days).forEach(([k, v]) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !v) return;
+    const d = day(k), typed = +v.typed || +v.words || 0, logged = +v.logged || 0;
+    if (typed > (+d.typed || 0) || logged > (+d.logged || 0)) dayCount++;
+    d.typed = Math.max(+d.typed || 0, typed); d.logged = Math.max(+d.logged || 0, logged);
+  });
+  (Array.isArray(inc.logs) ? inc.logs : []).forEach(l => { if (l && l.id && l.day && !S.logs.some(y => y.id === l.id)) S.logs.push(l); });
+  return { notes, dayCount };
+}
+
+let toastT;
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 3200); }
+async function copy(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg || "Copied"); }
+  catch (e) { toast("Couldn't copy. Select the text and copy it yourself."); }
+}
+
+// ---- Events ----
+$("#body").addEventListener("input", e => {
+  const n = activeNote(); if (!n) return;
+  n.body = e.target.value; n.updatedAt = Date.now();
+  const now = wc(n.body), delta = now - lastWc; lastWc = now;
+  if (delta > 0) {
+    if (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop") { if (delta > 3) toast("Pasted words aren't counted. Use Log words for writing done elsewhere."); }
+    else addTyped(delta);
+  }
+  $("#noteWc").textContent = fmt(now); save(); clearTimeout(renderNotes.t); renderNotes.t = setTimeout(renderNotes, 300);
+});
+$("#title").addEventListener("input", e => { const n = activeNote(); if (!n) return; n.title = e.target.value; n.updatedAt = Date.now(); save(); renderNotes(); });
+$("#tag").addEventListener("change", e => { const n = activeNote(); if (!n) return; n.tag = e.target.value; n.updatedAt = Date.now(); save(); renderNotes(); });
+$("#search").addEventListener("input", renderNotes);
+$("#newNote").addEventListener("click", newNote);
+$("#notes").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) openNote(b.dataset.id); });
+let delArm = null;
+$("#delNote").addEventListener("click", e => {
+  const btn = e.currentTarget;
+  if (!delArm) { delArm = setTimeout(() => { delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm"); }, 3000); btn.textContent = "Tap again to delete"; btn.classList.add("confirm"); return; }
+  clearTimeout(delArm); delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm");
+  const n = activeNote(); if (n) { n.deleted = true; n.updatedAt = Date.now(); n.body = ""; n.title = ""; }
+  S.activeId = null; ensureNote(); toast("Note deleted"); save();
+});
+$("#sprintBox").addEventListener("click", e => {
+  const b = e.target.closest("[data-sprint]"); if (!b) return;
+  if (b.dataset.sprint === "stop") { toast(`Sprint stopped at ${fmt(sprint.words)} words.`); sprint = null; renderSprint(); return; }
+  sprint = { end: Date.now() + +b.dataset.sprint * 60000, min: +b.dataset.sprint, words: 0 }; tick(); $("#body").focus();
+});
+$("#focusBtn").addEventListener("click", () => {
+  const on = document.body.classList.toggle("focus");
+  $("#focusBtn").textContent = on ? "Exit focus" : "Focus";
+  if (on) { $("#body").focus(); try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {} }
+  else { try { document.fullscreenElement && document.exitFullscreen().catch(() => {}); } catch (e) {} }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
+  if (e.key === "Escape" && !$("#shareModal").hidden) $("#shareModal").hidden = true;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
+});
+$("#logForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const n = Math.round(+$("#logN").value);
+  if (!(n > 0) || n > 100000) { toast("Enter a number of words between 1 and 100,000."); return; }
+  const k = dayKey(), d = day(k); d.logged = (+d.logged || 0) + n; d.updatedAt = Date.now();
+  S.logs.push({ id: uuid(), day: k, words: n, note: "", createdAt: Date.now() });
+  $("#logN").value = ""; save(); renderCounts(); toast(`Logged ${fmt(n)} words for today.`);
+});
+$("#logs").addEventListener("click", e => {
+  const b = e.target.closest("[data-dellog]"); if (!b) return;
+  const i = S.logs.findIndex(l => l.id === b.dataset.dellog); if (i < 0) return;
+  const l = S.logs[i], d = day(l.day); d.logged = Math.max(0, (+d.logged || 0) - l.words);
+  S.logs.splice(i, 1); save(); renderProgress(); renderCounts();
+});
+const setCh = c => { S.settings.challenge = c; save(); renderProgress(); renderCounts(); $("#setMsg").textContent = c ? "Challenge set." : "Challenge off."; };
+$("#preNov").addEventListener("click", () => setCh({ name: "November novel", target: 50000, start: `${new Date().getFullYear()}-11-01`, days: 30 }));
+$("#pre30").addEventListener("click", () => setCh({ name: "30-day challenge", target: 50000, start: dayKey(), days: 30 }));
+$("#preOff").addEventListener("click", () => setCh(null));
+$("#setForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const g = Math.round(+$("#goal").value); if (g > 0 && g <= 100000) S.settings.goal = g;
+  S.settings.restDays = $("#rest").checked;
+  if (S.settings.challenge) {
+    const t = Math.round(+$("#chTarget").value), d = Math.round(+$("#chDays").value), st = $("#chStart").value;
+    S.settings.challenge = { name: $("#chName").value.trim() || "Challenge", target: t > 0 ? t : 50000, start: /^\d{4}-\d{2}-\d{2}$/.test(st) ? st : dayKey(), days: d > 0 && d <= 366 ? d : 30 };
+  }
+  save(); renderProgress(); renderCounts(); $("#setMsg").textContent = "Saved.";
+  setTimeout(() => $("#setMsg").textContent = "", 2500);
+});
+$("#expJson").addEventListener("click", () => download(`inkstreak-backup-${dayKey()}.json`, JSON.stringify(exportObj(), null, 2), "application/json"));
+$("#copyJson").addEventListener("click", () => copy(JSON.stringify(exportObj()), "Backup copied. Paste it into a note or email to yourself."));
+$("#expTxt").addEventListener("click", () => {
+  const txt = liveNotes().map(n => `${noteTitle(n)}\n${new Date(n.updatedAt).toLocaleString()}${n.tag ? " · " + n.tag : ""}\n\n${n.body}`).join("\n\n----------\n\n");
+  download(`inkstreak-notes-${dayKey()}.txt`, txt, "text/plain");
+});
+$("#impFile").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const m = $("#dataMsg");
+    try { const res = merge(JSON.parse(r.result)); save(); ensureNote(); renderNotes(); renderProgress(); renderCounts();
+      m.className = "msg ok"; m.textContent = `Loaded. ${res.notes} notes added or updated, ${res.dayCount} days of word counts merged.`; }
+    catch (err) { m.className = "msg err"; m.textContent = "That file isn't an Inkstreak backup. Choose the .json file you downloaded from Inkstreak."; }
+    e.target.value = "";
+  };
+  r.readAsText(f);
+});
+$("#andForm").addEventListener("submit", e => signup(e, "android-beta", "#andEmail", "#andMsg"));
+document.addEventListener("click", e => { const b = e.target.closest("[data-copy]"); if (b) copy(b.dataset.copy); });
+$("#shareBtn").addEventListener("click", openShare);
+$("#shareClose").addEventListener("click", () => $("#shareModal").hidden = true);
+$("#shareModal").addEventListener("click", e => { if (e.target.id === "shareModal") e.target.hidden = true; });
+document.querySelectorAll("[data-size]").forEach(b => b.addEventListener("click", () => { cardSize = b.dataset.size; openShare(); }));
+$("#shareDl").addEventListener("click", () => {
+  if (!cardCanvas) return;
+  try { const a = document.createElement("a"); a.href = cardCanvas.toDataURL("image/png"); a.download = `inkstreak-${dayKey()}.png`; document.body.appendChild(a); a.click(); a.remove(); }
+  catch (e) { toast("Press and hold the image to save it."); }
+});
+window.addEventListener("hashchange", route);
+window.addEventListener("storage", e => { if (e.key === KEY) { S = load(); ensureNote(); openNote(S.activeId); } });
+// Day rollover while the page is open
+let lastDay = dayKey();
+setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderCounts(); if (!$("#v-progress").hidden) renderProgress(); } }, 30000);
+
+// ---- Start ----
+renderApp(); ensureNote(); openNote(S.activeId); renderSprint(); renderSaved(); route();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
+</script>
+</body>
+</html>
