@@ -970,7 +970,7 @@ function rewardBase() {
 }
 function renderRewards() {
   const base = rewardBase(), c = chInfo();
-  $("#rewards").innerHTML = `<h2>Unlocks</h2><p class="soft" style="font-size:14px">${c && c.status !== "before" ? `Counting your ${esc(c.name)} words.` : "Counting all your words."} Keep writing to open each one.</p>
+  $("#rewards").innerHTML = `<h2>Unlocks</h2><p class="soft" style="font-size:14px">${c && c.status !== "before" ? `Counting your ${esc(c.name)} words.` : "Counting all your words."} Keep writing to open each one. Past 10,000 words? See <a href="../guide/">what your notes can do for you</a>.</p>
   <div class="rw">${MILESTONES.map((m, i) => {
     const dw = Object.keys(S.days).filter(k => total(k) > 0).length, needD = m.minDays ? Math.max(0, m.minDays - dw) : 0;
     const open = base >= m.at && !needD, pct = Math.min(100, base / m.at * 100);
@@ -996,7 +996,7 @@ function openPortrait() {
     ${best ? `<p>Your biggest day was <b>${parseDay(best).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</b>, with <b class="num">${fmt(total(best))}</b> words.</p>` : ""}
     <div><h3>Words you keep coming back to</h3><p class="soft" style="font-size:13px;margin-bottom:8px">From the notes on this page. Counted in your browser; nothing is sent anywhere.</p>
     <div class="words">${top.length ? top.map(([w, n]) => `<span>${esc(w)} <small class="soft num">${n}</small></span>`).join("") : `<p class="soft">Write here on the Write page and your words show up.</p>`}</div></div>
-    <p class="soft" style="font-size:14px">Next unlock: <b>${base >= 25000 ? "Something special at 50,000" : "A letter from Inky at 25,000"}</b>.</p>`;
+    <p class="soft" style="font-size:14px">Next unlock: <b>${base >= 25000 ? "Something special at 50,000" : "A letter from Inky at 25,000"}</b>.</p><a class="btn primary" href="../guide/">20 ways to use your notes with AI</a>`;
   $("#portraitModal").hidden = false;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-close]"); if (b) $("#" + b.dataset.close).hidden = true; });

@@ -634,7 +634,7 @@ async function renderFinal() {
     <h2 style="font-size:24px">Your writing is scattered. Bring it into one place.</h2>
     <button class="btn" type="button" id="moreSrc">Add another place to my total</button>
     <a class="btn go" href="../write/" id="startWrite">Start writing in Inkstreak</a>
-    <p class="tiny">Write for 5 minutes a day. Free, no account, and your words stay on your phone.</p></div>`;
+    <p class="tiny">Write for 5 minutes a day. Free, no account, and your words stay on your phone.</p>${C.words >= 10000 ? `<a class="btn" href="../guide/">What can ${fmt(C.words)} words do for you?</a>` : ""}</div>`;
   card = await makeCard(); $("#cardImg").src = card.toDataURL("image/png");
   $("#saveCard").onclick = () => { try { const a = document.createElement("a"); a.href = card.toDataURL("image/png"); a.download = "my-writing-wrapped.png"; document.body.appendChild(a); a.click(); a.remove(); track("wrapped_download"); } catch (e) { toast("Press and hold the image to save it."); } };
   $("#shareCard").onclick = () => card.toBlob(async b => {

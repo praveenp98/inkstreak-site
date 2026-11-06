@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="20 ways to use your own notes and journal with AI: find your patterns, review decisions, rebuild your year, find story ideas. Copy-paste prompts, and how to keep your notes out of AI training.">
+<meta name="theme-color" content="#4FC31A">
+<link rel="canonical" href="https://inkstreak.app/guide/">
+<link rel="icon" href="../write/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="../write/apple-touch-icon.png">
+<meta property="og:title" content="What your words can do for you">
+<meta property="og:description" content="20 copy-paste AI prompts that read your own notes back to you. AI reads, you write.">
+<meta property="og:image" content="https://inkstreak.app/write/og.png">
+<meta property="og:url" content="https://inkstreak.app/guide/">
+<meta name="twitter:card" content="summary_large_image">
+<script defer data-website-id="dfid_KUDrv3UsUARsq1eUgd1q2" data-domain="inkstreak.app" src="https://datafa.st/js/script.cookieless.js"></script>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>What Your Words Can Do</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: reading column. Hero + "your words" panel, privacy steps, rules, then prompt cards grouped by goal with level filters. Matches the /write tracker look. */
+:root{
+  --bg:#F5F7F2; --card:#FFFFFF; --ink:#2C322E; --soft:#68706A; --line:#E1E6DD;
+  --green:#4FC31A; --green-d:#3E9C12; --green-t:#EAF7E1; --orange:#FF9600; --blue:#1A9BD6; --code:#F1F4EE;
+  --ui:"Nunito",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Literata",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111512; --card:#191F1A; --ink:#E9EEE7; --soft:#9AA39C; --line:#2B342D;
+  --green:#58CC22; --green-d:#3A8F14; --green-t:#1D2E17; --orange:#FF9F1A; --blue:#3BB8F2; --code:#141A15; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111512; --card:#191F1A; --ink:#E9EEE7; --soft:#9AA39C; --line:#2B342D;
+  --green:#58CC22; --green-d:#3A8F14; --green-t:#1D2E17; --orange:#FF9F1A; --blue:#3BB8F2; --code:#141A15; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:600 16px/1.6 var(--ui);-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--green-d)}
+h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.015em;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(32px,7vw,48px)}
+h2{font-size:26px}
+h3{font-size:18px}
+p{margin:0}
+.soft{color:var(--soft)}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:26px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:900;font-size:20px}
+.brand svg{width:24px;height:30px}
+.top nav{margin-left:auto;display:flex;gap:14px;font-size:14.5px;font-weight:800}
+.top nav a{color:var(--soft);text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:800 14.5px var(--ui);padding:9px 14px;border-radius:13px;border:2px solid var(--line);background:var(--card);box-shadow:0 3px 0 var(--line);cursor:pointer;color:var(--ink);text-decoration:none;white-space:nowrap}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.go{background:var(--green);border-color:var(--green-d);box-shadow:0 4px 0 var(--green-d);color:#fff}
+.btn.go:active{box-shadow:0 2px 0 var(--green-d)}
+section{margin-top:44px}
+.lead{font:400 19px/1.65 var(--serif);margin-top:14px;max-width:62ch}
+.mine{margin-top:22px;background:var(--card);border:2px solid var(--green);border-radius:20px;padding:18px 20px;display:grid;gap:12px}
+.mine .row{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.mine b.big{font-size:36px;font-weight:900;line-height:1}
+.ladder{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.step{border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-size:14px}
+.step b{display:block;font-size:16px}
+.step.on{border-color:var(--green);background:var(--green-t)}
+.step.next{border-style:dashed;border-color:var(--orange)}
+@media (max-width:560px){.ladder{grid-template-columns:1fr}}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+@media (max-width:640px){.rules{grid-template-columns:1fr}}
+.rule{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:4px}
+.rule p{font-size:15px;color:var(--soft)}
+.priv{margin-top:16px;display:grid;gap:10px}
+details{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 16px}
+summary{cursor:pointer;font-weight:900}
+details ol{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:15px}
+details p{font-size:14.5px;color:var(--soft);margin-top:6px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:10px;z-index:5}
+.chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font:800 14px var(--ui);cursor:pointer;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.group{margin-top:28px}
+.group > p{color:var(--soft);margin-top:4px;font-size:15px}
+.cards{display:grid;gap:12px;margin-top:14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 18px;display:grid;gap:10px;min-width:0}
+.card .head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.card .head h3{flex:1;min-width:200px}
+.lvl{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--soft);border:2px solid var(--line);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.card.ready .lvl{color:var(--green-d);border-color:var(--green)}
+.card .why{font-size:15px;color:var(--soft)}
+.prompt{background:var(--code);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font:400 15px/1.6 var(--serif);white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.cta{margin-top:44px;background:var(--green);color:#fff;border-radius:22px;padding:24px;display:grid;gap:10px}
+.cta .btn{background:#fff;color:var(--green-d);border-color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.15);justify-self:start}
+footer{margin-top:30px;font-size:13px;color:var(--soft)}
+.src{font-size:13px;color:var(--soft);margin-top:8px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="inky" viewBox="0 0 100 124">
+    <path d="M50 6 C60 34 98 48 98 76 A48 41 0 0 1 2 76 C2 48 40 34 50 6Z" fill="#1A8FC7" transform="translate(0,4)"/>
+    <path d="M50 6 C60 34 98 48 98 76 A48 41 0 0 1 2 76 C2 48 40 34 50 6Z" fill="#22AEEF"/>
+    <circle cx="38" cy="80" r="11" fill="#fff"/><circle cx="62" cy="80" r="11" fill="#fff"/>
+    <circle cx="40" cy="82" r="5.6" fill="#1D1D1D"/><circle cx="64" cy="82" r="5.6" fill="#1D1D1D"/>
+    <path d="M40 99 Q50 107 60 99" stroke="#1D1D1D" stroke-width="4.8" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="../"><svg><use href="#inky"/></svg>inkstreak</a>
+    <nav aria-label="Main"><a href="../write/">Write</a><a href="../wrapped/">Wrapped</a></nav>
+  </div>
+
+  <header>
+    <h1>What your words can do for you</h1>
+    <p class="lead">Once you've written 10,000 words, your notes hold patterns you can't see from inside them. An AI can read them back to you: what you keep returning to, what you avoid, what you've already figured out. You still do the writing. The AI just holds up the mirror.</p>
+    <div class="mine" id="mine" hidden></div>
+  </header>
+
+  <section aria-labelledby="h-rules">
+    <h2 id="h-rules">Four rules first</h2>
+    <div class="rules">
+      <div class="rule"><h3>AI reads, you write</h3><p>Ask it to quote and reflect your words. Never ask it to rewrite your journal or write the next entry for you.</p></div>
+      <div class="rule"><h3>Remove what isn't yours to share</h3><p>Delete other people's full names, phone numbers, addresses and anything someone told you in confidence before you paste.</p></div>
+      <div class="rule"><h3>Turn off training first</h3><p>Most AI apps can learn from your chats unless you switch it off. Steps for each app are below.</p></div>
+      <div class="rule"><h3>Treat the answer as a guess</h3><p>An AI notices patterns but doesn't know you. Keep what rings true, ignore the rest, and write down what you disagree with.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-priv">
+    <h2 id="h-priv">Before you paste: keep your notes out of AI training</h2>
+    <p class="soft" style="margin-top:6px">Inkstreak never sends your words anywhere; the buttons on this page only copy them to your clipboard. What happens after you paste depends on the app you paste into.</p>
+    <div class="priv">
+      <details><summary>ChatGPT</summary><ol><li>Tap your profile picture, then <b>Settings</b>.</li><li>Open <b>Data Controls</b>.</li><li>Turn off <b>Improve the model for everyone</b>.</li></ol><p>Or start a <b>Temporary Chat</b>, which isn't used for training.</p></details>
+      <details><summary>Claude</summary><ol><li>Open <b>Settings</b>, then <b>Privacy</b>.</li><li>Turn off <b>Help improve our AI models</b>.</li></ol><p>New chats after that aren't used for training.</p></details>
+      <details><summary>Gemini</summary><ol><li>In the Gemini app, tap your profile picture.</li><li>Open <b>Gemini Apps Activity</b> (Google is renaming it <b>Keep Activity</b>).</li><li>Tap <b>Turn off</b>.</li></ol><p>Google may still keep chats for up to 72 hours to run the service.</p></details>
+      <details><summary>Most private: an AI on your own computer</summary><ol><li>Install a free app such as LM Studio or Ollama on a laptop.</li><li>Download a model in the app.</li><li>Paste your notes there. Nothing leaves your computer.</li></ol><p>Answers are a bit less sharp than the big apps, but your words never touch the internet.</p></details>
+    </div>
+    <p class="src">Steps checked Nov 6, 2026: <a href="https://www.techradar.com/computing/artificial-intelligence/your-chatgpt-data-automatically-trains-its-ai-models-unless-you-turn-off-this-setting">ChatGPT</a>, <a href="https://privacy.claude.com/en/articles/12109829-how-do-i-change-my-model-improvement-privacy-settings">Claude</a>, <a href="https://www.bgr.com/1939066/how-to-stop-google-gemini-training-personal-data/">Gemini</a>. Apps change their menus; if a name differs, look under privacy or data settings.</p>
+  </section>
+
+  <section aria-labelledby="h-ideas">
+    <h2 id="h-ideas">20 ways to use your notes</h2>
+    <p class="soft" style="margin-top:6px">Each card has a prompt to copy. Paste your notes underneath it, or tap <b>Copy with my notes</b> to copy both at once from your Inkstreak notes on this device.</p>
+    <div class="filters" role="group" aria-label="Filter by level" id="filters">
+      <button class="chip" type="button" data-lvl="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-lvl="10000" aria-pressed="false">10,000+ words</button>
+      <button class="chip" type="button" data-lvl="25000" aria-pressed="false">25,000+</button>
+      <button class="chip" type="button" data-lvl="50000" aria-pressed="false">50,000+</button>
+    </div>
+    <div id="groups"></div>
+  </section>
+
+  <div class="cta">
+    <h2 style="font-size:24px">More words, sharper mirror</h2>
+    <p>Patterns show up after about 10,000 words and get clearer with every month you add. Write for 5 minutes today.</p>
+    <a class="btn" href="../write/">Open Inkstreak</a>
+  </div>
+
+  <footer>Inkstreak · Keep writing human · <a href="../">inkstreak.app</a></footer>
+</div>
+<div class="toast" id="toast" hidden aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString();
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const wc = s => (String(s || "").match(/\S+/g) || []).length;
+const track = g => { try { window.datafast && window.datafast(g); } catch (e) {} };
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3600); }
+
+const BASE = "Below are my own notes and journal entries, oldest first. Work only from what I actually wrote. Quote my exact words (with dates where they exist) to back up every point. Don't rewrite, polish or add to my writing, and don't give me generic advice. If something isn't in my notes, say so.";
+
+const GROUPS = [
+  { name: "Know yourself", why: "See the patterns you're too close to notice.", items: [
+    { lvl: 10000, t: "What do I keep coming back to?", why: "The 5 themes that show up again and again, and how often.", p: "Find the 5 topics, worries or wishes I return to most. For each: how often it shows up, the first and the most recent time, and two short quotes. Then tell me which one I mention most but seem to do least about." },
+    { lvl: 10000, t: "Questions I've been avoiding", why: "The AI asks; you answer in Inkstreak.", p: "Read my notes and ask me 7 questions I seem to be circling but never answering directly. Each question gets one sentence on where in my notes it comes from. Don't answer them for me." },
+    { lvl: 25000, t: "What I say vs what I do", why: "Contradictions between your plans and your days.", p: "List places where what I said I wanted or would do doesn't match what I later wrote about actually doing. Show each pair of quotes side by side with dates. Be kind but honest. End with the one gap that seems to cost me most." },
+    { lvl: 25000, t: "My mood, month by month", why: "Needs dated entries: Wrapped and the app add dates.", p: "Using the dates in my notes, describe how my mood and energy changed month by month in one line each, with a quote per month. Point out the best and hardest stretches and what I was writing about around them." },
+    { lvl: 50000, t: "Who I'm becoming", why: "Compare the earliest you with the latest you.", p: "Compare the first quarter of my notes with the last quarter. What changed in what I care about, how I talk about myself and what I'm afraid of? What stayed exactly the same? Use quotes from both periods." }
+  ]},
+  { name: "Decide better", why: "Your past self already did half the thinking.", items: [
+    { lvl: 10000, t: "Decisions I've already made", why: "A list of choices you wrote about and how they turned out.", p: "Find every decision I wrote about (big or small). For each: what I decided, why (in my words), and whether I later wrote about how it turned out. Mark the ones with no follow-up so I can check back on them." },
+    { lvl: 10000, t: "Advice I gave that I should take", why: "You're wiser about other people's lives.", p: "Find advice or encouragement I wrote to or about other people, or told myself in a good moment. List it in my words. Then point out which pieces apply to what I'm struggling with in my most recent notes." },
+    { lvl: 25000, t: "Worries vs what actually happened", why: "Proof that most fears don't come true.", p: "List the things I worried about, with dates. For each, check whether I later wrote about how it actually went. Count how many worries came true, partly came true, didn't, or were never mentioned again." },
+    { lvl: 25000, t: "My own rules for life", why: "The principles hidden in your notes.", p: "From my notes, pull out 8 to 10 rules or principles I seem to live by, even if I never stated them as rules. Back each with two quotes. Mark any rule I break often." }
+  ]},
+  { name: "Remember your life", why: "Notes are memory. Read them back.", items: [
+    { lvl: 10000, t: "Highlights reel", why: "The good moments you'd forgotten writing down.", p: "Find the 15 happiest, funniest or proudest moments in my notes. Give each a date (if there is one), a short title, and the exact line I wrote. Keep my words as they are." },
+    { lvl: 25000, t: "My year as a timeline", why: "Key moments in order, with dates.", p: "Build a timeline of the important events, changes and turning points in my notes, in date order. One line each, with my own quote. Group them by month." },
+    { lvl: 25000, t: "The people in my story", why: "Who shows up, when, and how you write about them.", p: "List the people I mention most (first names or roles only). For each: when they appear, how I usually feel when I write about them, and one quote. Don't guess about them beyond what I wrote." },
+    { lvl: 10000, t: "Things I'm grateful for", why: "A list you can reread on a bad day.", p: "Collect every moment of gratitude, relief or small joy in my notes into one list, in my words, with dates. Then name the 3 kinds of things that most reliably make me happy." }
+  ]},
+  { name: "Create something", why: "Your notes are full of ideas. Find them, then write them yourself.", items: [
+    { lvl: 10000, t: "Story seeds hiding in my notes", why: "Characters, scenes and plots you didn't notice.", p: "Find 10 moments, images, people or lines in my notes that could start a story, essay or poem. For each: quote it, then give one question that would push me to write it. Don't write the piece." },
+    { lvl: 25000, t: "My writing voice", why: "Learn how you sound, so you can stay yourself.", p: "Describe my writing voice from these notes: sentence length, favourite words and phrases, tone, what I do when I'm emotional, and what makes it sound like me. Give quotes for each. Don't imitate me or rewrite anything." },
+    { lvl: 50000, t: "The book that's already in here", why: "An outline from your own words. You write the chapters.", p: "If these notes were the raw material for a book (memoir, essay collection or novel), what would it be about? Suggest 3 possible books. For the strongest, give a chapter outline where every chapter lists the notes (with dates and quotes) it would draw on. Don't write any chapter text." },
+    { lvl: 50000, t: "Letters I should send", why: "People you keep writing about but never to.", p: "Find people I write about with strong feeling but may never have said it to. For each, list what I seem to want to say, in my own quotes. Don't draft the letter; I'll write it." }
+  ]},
+  { name: "Get things done", why: "Turn scattered notes into a plan.", items: [
+    { lvl: 10000, t: "Every idea I've ever had", why: "Business, app, trip and project ideas, ranked.", p: "List every idea I've written down (projects, businesses, trips, things to make). For each: the date, my words, and how many times I came back to it. Rank by how often it reappears." },
+    { lvl: 10000, t: "Promises I made to myself", why: "The things you said you'd do.", p: "List every time I told myself I would start, stop or do something. For each: the date, my exact words, and whether I later wrote that I did it. Group into done, still open, and dropped." },
+    { lvl: 25000, t: "What I've learned", why: "Lessons you wrote down and forgot.", p: "Collect every lesson, realisation or 'note to self' in my notes. Remove duplicates, keep my words, and group them by area of life. Put the ones I repeated most at the top." }
+  ]}
+];
+
+// ---------- Local data ----------
+let notes = [], typed = 0, wrappedTotal = 0;
+try {
+  const S = JSON.parse(localStorage.getItem("inkstreak.web.v1") || "null");
+  if (S) {
+    notes = (S.notes || []).filter(n => !n.deleted && (n.body || "").trim() && n.title !== "Start here").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    typed = Object.values(S.days || {}).reduce((a, d) => a + (+d.typed || 0) + (+d.logged || 0), 0);
+  }
+} catch (e) {}
+try { const W = JSON.parse(localStorage.getItem("inkstreak.wrapped.v1") || "null"); if (W && Array.isArray(W.sources)) wrappedTotal = W.sources.filter(s => !s.sample).reduce((a, s) => a + (s.words || 0), 0); } catch (e) {}
+const noteWords = notes.reduce((a, n) => a + wc(n.body), 0);
+const level = Math.max(noteWords, typed, wrappedTotal);
+
+function renderMine() {
+  if (!level) return;
+  const box = $("#mine"); box.hidden = false;
+  const steps = [10000, 25000, 50000];
+  const next = steps.find(s => level < s);
+  box.innerHTML = `<div class="row"><b class="big num">${fmt(level)}</b><span>words written${wrappedTotal > Math.max(noteWords, typed) ? " (from Writing Wrapped)" : ""}. ${noteWords ? `${fmt(noteWords)} of them are in your Inkstreak notes on this device, ready to copy.` : "Save writing as Inkstreak notes to copy it here in one tap."}</span></div>
+    <div class="ladder">${steps.map(s => `<div class="step${level >= s ? " on" : s === next ? " next" : ""}"><b class="num">${fmt(s)}</b>${level >= s ? "Unlocked" : s === next ? fmt(s - level) + " words to go" : "Later"}</div>`).join("")}</div>`;
+}
+
+function notesText() {
+  const MAX = 50000; let out = [], words = 0, cut = false;
+  for (let i = notes.length - 1; i >= 0; i--) {
+    const n = notes[i], w = wc(n.body);
+    if (words + w > MAX && out.length) { cut = true; break; }
+    const d = n.createdAt ? new Date(n.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
+    out.unshift(`### ${n.title || "Untitled"}${d ? " (" + d + ")" : ""}\n${n.body.trim()}`); words += w;
+  }
+  return { text: out.join("\n\n"), words, cut };
+}
+
+function renderGroups(filter) {
+  $("#groups").innerHTML = GROUPS.map(g => {
+    const items = g.items.filter(i => filter === "all" || i.lvl === +filter);
+    if (!items.length) return "";
+    return `<div class="group"><h2 style="font-size:22px">${esc(g.name)}</h2><p>${esc(g.why)}</p><div class="cards">${items.map(i => {
+      const id = GROUPS.indexOf(g) + "-" + g.items.indexOf(i);
+      return `<article class="card${level >= i.lvl ? " ready" : ""}"><div class="head"><h3>${esc(i.t)}</h3><span class="lvl">${level >= i.lvl ? "✓ " : ""}${fmt(i.lvl)}+ words</span></div>
+        <p class="why">${esc(i.why)}</p><div class="prompt">${esc(i.p)}</div>
+        <div class="acts"><button class="btn" type="button" data-copy="${id}">Copy prompt</button>${noteWords ? `<button class="btn go" type="button" data-copyall="${id}">Copy with my notes</button>` : ""}</div></article>`;
+    }).join("")}</div></div>`;
+  }).join("");
+}
+function promptFor(id) { const [g, i] = id.split("-").map(Number); const it = GROUPS[g].items[i]; return { it, text: `${it.t}\n\n${it.p}\n\n${BASE}` }; }
+async function copy(text, msg) {
+  try { await navigator.clipboard.writeText(text); toast(msg); return true; }
+  catch (e) {
+    const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {} ta.remove();
+    toast(ok ? msg : "Your browser blocked copying. Select the prompt text and copy it yourself."); return ok;
+  }
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-copy]"), b = e.target.closest("[data-copyall]");
+  if (a) { const { it, text } = promptFor(a.dataset.copy); copy(text + "\n\nMY NOTES:\n[paste your notes here]", "Prompt copied. Paste it into your AI app, then add your notes."); track("guide_copy"); }
+  if (b) {
+    const { text } = promptFor(b.dataset.copyall), n = notesText();
+    copy(`${text}\n\nMY NOTES (${fmt(n.words)} words):\n\n${n.text}`, n.cut ? `Copied with your newest ${fmt(n.words)} words. Many AI apps can't take more in one paste.` : `Copied with all ${fmt(n.words)} words of your notes. Paste it into your AI app.`);
+    track("guide_copy_notes");
+  }
+  const f = e.target.closest("[data-lvl]");
+  if (f) { document.querySelectorAll("[data-lvl]").forEach(x => x.setAttribute("aria-pressed", String(x === f))); renderGroups(f.dataset.lvl); }
+});
+renderMine(); renderGroups("all");
+})();
+</script>
+</body>
+</html>
