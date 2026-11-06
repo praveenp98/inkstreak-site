@@ -207,6 +207,21 @@ body.focus main{padding-block:8px}
 .paper-pick .btn{flex:1 1 200px}
 #paperPrev{display:block;width:100%;max-height:60vh;object-fit:contain;border-radius:12px;border:2px solid var(--line);background:var(--bg);-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
 .paper-tip{font-size:14px;font-weight:800;background:var(--green-t);border-radius:12px;padding:8px 12px;margin-top:8px}
+.nhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nhead > div{flex:1;min-width:180px}
+.ntools{display:flex;gap:8px;flex-wrap:wrap}
+.ntools input{flex:1 1 220px}
+.ntags{display:flex;gap:6px;flex-wrap:wrap}
+.ntag{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font:800 13.5px var(--ui);cursor:pointer;color:var(--ink)}
+.ntag[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ncard{text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:grid;gap:6px;align-content:start;min-width:0;font:inherit;color:inherit}
+.ncard:hover{border-color:var(--green)}
+.ncard b{font-size:16px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ncard .meta{font-size:12.5px;color:var(--soft);font-weight:800}
+.ncard .snip{font:400 14.5px/1.5 var(--serif);color:var(--soft);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.ncard img{width:100%;max-width:100%;height:130px;object-fit:cover;border-radius:10px;border:2px solid var(--line)}
+.nempty{grid-column:1/-1;text-align:center;padding:30px 10px;color:var(--soft)}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -228,8 +243,9 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <a class="brand" href="#write"><svg><use href="#inky"/></svg>inkstreak</a>
     <nav aria-label="Sections">
       <a href="#write" data-view="write">Write</a>
+      <a href="#notes" data-view="notes">Notes</a>
       <a href="#progress" data-view="progress">Progress</a>
-      <a href="#get-app" data-view="get-app">Get the app</a>
+      <a href="#get-app" data-view="get-app">App</a>
     </nav>
     <div class="chips">
       <span class="chip num" title="Words today"><span aria-hidden="true">✍️</span><span id="hWords">0</span></span>
@@ -305,6 +321,21 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="view stack" id="v-notes" hidden>
+    <div class="nhead">
+      <div><h2>All notes</h2><p class="soft num" id="nSum"></p></div>
+      <button class="btn primary" type="button" id="nNew">+ New note</button>
+      <button class="btn" type="button" id="nPaper">✍️ Add a paper page</button>
+    </div>
+    <div class="ntools">
+      <input id="nSearch" type="text" placeholder="Search all notes" aria-label="Search all notes">
+      <select id="nSort" aria-label="Sort notes"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="long">Longest first</option><option value="az">A to Z</option></select>
+    </div>
+    <div class="ntags" id="nTags" role="group" aria-label="Filter by category"></div>
+    <div class="ngrid" id="nGrid"></div>
   </section>
 
   <!-- PROGRESS -->
@@ -590,7 +621,7 @@ function chInfo() {
 }
 
 // ---- Rendering ----
-const views = ["write", "progress", "get-app"];
+const views = ["write", "notes", "progress", "get-app"];
 function route() {
   let v = (location.hash || "#write").slice(1);
   if (v === "paper") { v = "write"; setTimeout(openPaper, 50); try { history.replaceState(null, "", "#write"); } catch (e) {} }
@@ -598,6 +629,7 @@ function route() {
   views.forEach(x => { $("#v-" + x).hidden = x !== v; });
   document.querySelectorAll("nav[aria-label=Sections] a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "progress") renderProgress();
+  if (v === "notes") renderAllNotes();
 }
 function renderCounts() {
   const t = total(dayKey()), g = +S.settings.goal || 1667, st = streakInfo();
@@ -970,6 +1002,34 @@ window.addEventListener("storage", e => { if (e.key === KEY) { S = load(); ensur
 // Day rollover while the page is open
 let lastDay = dayKey();
 setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderCounts(); if (!$("#v-progress").hidden) renderProgress(); } }, 30000);
+
+// ---- All notes ----
+let nTag = "", thumbUrls = [];
+function renderAllNotes() {
+  thumbUrls.forEach(u => URL.revokeObjectURL(u)); thumbUrls = [];
+  const all = liveNotes(), q = $("#nSearch").value.trim().toLowerCase(), sort = $("#nSort").value;
+  const words = all.reduce((a, n) => a + wc(n.body), 0);
+  $("#nSum").textContent = `${fmt(all.length)} ${all.length === 1 ? "note" : "notes"} · ${fmt(words)} words · saved in this browser`;
+  const tags = [...new Set(all.map(n => n.tag).filter(Boolean))].sort();
+  if (nTag && !tags.includes(nTag)) nTag = "";
+  $("#nTags").innerHTML = tags.length ? [["", "All"], ...tags.map(t => [t, t])].map(([v, l]) => `<button class="ntag" type="button" data-tag="${esc(v)}" aria-pressed="${v === nTag}">${esc(l)}${v ? ` <small class="num">${all.filter(n => n.tag === v).length}</small>` : ""}</button>`).join("") : "";
+  let list = all.filter(n => (!nTag || n.tag === nTag) && (!q || (n.title + " " + n.body + " " + n.tag).toLowerCase().includes(q)));
+  const by = { new: (a, b) => (b.createdAt || 0) - (a.createdAt || 0), old: (a, b) => (a.createdAt || 0) - (b.createdAt || 0), long: (a, b) => wc(b.body) - wc(a.body), az: (a, b) => noteTitle(a).localeCompare(noteTitle(b)) }[sort];
+  list.sort(by);
+  $("#nGrid").innerHTML = list.length ? list.map(n => {
+    const body = (n.body || "").trim(), first = (n.title || "").trim() ? body : body.split("\n").slice(1).join(" ");
+    return `<button class="ncard" type="button" data-open="${n.id}">${n.photo ? `<img data-thumb="${n.id}" alt="">` : ""}<b>${esc(noteTitle(n))}</b><span class="meta num">${new Date(n.createdAt || n.updatedAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })} · ${fmt(wc(n.body))} words${n.tag ? " · " + esc(n.tag) : ""}</span>${first.trim() ? `<span class="snip">${esc(first.slice(0, 280))}</span>` : ""}</button>`;
+  }).join("") : `<p class="nempty">${q || nTag ? "No notes match." : "No notes yet. Tap + New note to start."}</p>`;
+  document.querySelectorAll("[data-thumb]").forEach(async img => {
+    try { const b = await photoDB.get(img.dataset.thumb); if (b) { const u = URL.createObjectURL(b); thumbUrls.push(u); img.src = u; } else img.remove(); } catch (e) { img.remove(); }
+  });
+}
+$("#nGrid").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (!c) return; openNote(c.dataset.open); location.hash = "#write"; });
+$("#nTags").addEventListener("click", e => { const t = e.target.closest("[data-tag]"); if (!t) return; nTag = t.dataset.tag; renderAllNotes(); });
+$("#nSearch").addEventListener("input", renderAllNotes);
+$("#nSort").addEventListener("change", renderAllNotes);
+$("#nNew").addEventListener("click", () => { location.hash = "#write"; newNote(); });
+$("#nPaper").addEventListener("click", () => { location.hash = "#write"; openPaper(); });
 
 // ---- Paper pages ----
 const photoDB = {
