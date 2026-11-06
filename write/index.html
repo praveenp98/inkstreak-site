@@ -203,7 +203,10 @@ body.focus main{padding-block:8px}
 .paper-how summary{cursor:pointer;font-size:14.5px}
 .paper-steps{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:14.5px}
 #paperText{width:100%;min-height:150px;border:2px solid var(--line);border-radius:14px;padding:12px;font:400 17px/1.6 var(--serif);background:var(--paper);resize:vertical}
-#paperPrev{max-width:100%;max-height:200px;border-radius:12px;border:2px solid var(--line)}
+.paper-pick{display:flex;gap:8px;flex-wrap:wrap}
+.paper-pick .btn{flex:1 1 200px}
+#paperPrev{display:block;width:100%;max-height:60vh;object-fit:contain;border-radius:12px;border:2px solid var(--line);background:var(--bg);-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+.paper-tip{font-size:14px;font-weight:800;background:var(--green-t);border-radius:12px;padding:8px 12px;margin-top:8px}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -423,22 +426,34 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 <div class="modal" id="paperModal" hidden role="dialog" aria-modal="true" aria-labelledby="paperH">
   <div class="sheet">
     <div style="display:flex;align-items:center;gap:8px"><h2 id="paperH" style="flex:1">Add a paper page</h2><button class="btn small ghost" type="button" data-close="paperModal">Close</button></div>
-    <p class="soft" style="font-size:14px">Wrote in a notebook? Turn the page into text with your phone's own scanner. The words count toward today, and nothing is uploaded.</p>
-    <textarea id="paperText" placeholder="Your page's text goes here" aria-label="Text from your paper page"></textarea>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn small" type="button" id="paperPaste">📋 Paste</button><span class="soft num" style="font-size:14px"><b id="paperWc">0</b> words</span></div>
-    <details class="paper-how" open><summary><b>How to scan on iPhone</b></summary>
+    <p class="soft" style="font-size:14px">Turn a notebook page into text. Your phone reads the handwriting, the words count toward today, and nothing is uploaded.</p>
+    <div class="paper-pick">
+      <label class="btn primary" for="paperPhoto" style="cursor:pointer">🖼️ Choose a photo of the page</label>
+      <button class="btn" type="button" id="paperPaste">📋 Paste text</button>
+    </div>
+    <input id="paperPhoto" type="file" accept="image/*" hidden>
+    <div id="paperShot" hidden>
+      <img id="paperPrev" alt="Your paper page. Press and hold the writing to copy it.">
+      <p class="paper-tip" id="paperTip"></p>
+      <button class="btn primary" type="button" id="paperPaste2" style="width:100%;margin-top:8px">📋 Paste text</button>
+    </div>
+    <textarea id="paperText" placeholder="The text from your page goes here" aria-label="Text from your paper page"></textarea>
+    <p class="soft num" style="font-size:14px;margin-top:-4px"><b id="paperWc">0</b> words · fix any words it misread</p>
+    <details class="paper-how" id="howIos"><summary><b>How to get the text on iPhone</b></summary>
       <ol class="paper-steps">
-        <li><b>Easiest:</b> open the <b>Camera</b> app and point it at your page. When a yellow frame appears, tap the <b>Live Text</b> button (lines inside a frame, bottom right), tap <b>Copy All</b>, come back here and tap <b>📋 Paste</b>.</li>
-        <li><b>Or right here:</b> tap the box above, tap it again, choose <b>AutoFill › Scan Text</b> (on older iPhones just <b>Scan Text</b>), point at the page and tap <b>Insert</b>.</li>
-        <li>Already have a photo of the page? Open it in <b>Photos</b>, press and hold the text, tap <b>Select All › Copy</b>, then Paste here.</li>
-      </ol></details>
-    <details class="paper-how"><summary><b>How to scan on Android</b></summary>
-      <ol class="paper-steps"><li>Open <b>Google Lens</b> (or the camera's Lens button) and point at the page.</li><li>Tap <b>Text</b>, then <b>Select all › Copy</b>.</li><li>Come back here and tap <b>📋 Paste</b>.</li></ol></details>
-    <p class="soft" style="font-size:13.5px">Fix any words it misread. Prefer not to scan? Close this and use <b>Log words</b> with a rough count.</p>
-    <label class="btn" for="paperPhoto" style="cursor:pointer">📷 Keep a photo of the page (optional)</label>
-    <input id="paperPhoto" type="file" accept="image/*" capture="environment" hidden>
-    <img id="paperPrev" alt="Your paper page" hidden>
-    <p class="soft" style="font-size:12.5px">The photo stays on this device only. It isn't in backups.</p>
+        <li>Tap <b>Choose a photo of the page</b>, pick it from your Photos (or take one).</li>
+        <li>When the photo appears, <b>press and hold the writing</b> in it, tap <b>Select All</b>, then <b>Copy</b>.</li>
+        <li>Tap <b>📋 Paste text</b>. Safari asks once; tap <b>Paste</b>.</li>
+      </ol>
+      <p class="soft" style="font-size:13px;margin-top:6px">No photo yet? Open the Camera app, point at the page, tap the Live Text button (lines in a frame, bottom right), tap <b>Copy All</b>, come back and tap Paste text.</p></details>
+    <details class="paper-how" id="howAnd"><summary><b>How to get the text on Android</b></summary>
+      <ol class="paper-steps">
+        <li>Open the photo of your page in <b>Google Photos</b> or your Gallery and tap <b>Lens</b> (or open the Google Lens app and point at the page).</li>
+        <li>Tap <b>Text</b>, then <b>Select all</b> and <b>Copy</b>.</li>
+        <li>Come back and tap <b>📋 Paste text</b>.</li>
+      </ol>
+      <p class="soft" style="font-size:13px;margin-top:6px">Choose the photo here too if you'd like to keep it with the note.</p></details>
+    <p class="soft" style="font-size:12.5px">The photo stays on this device only and isn't in backups. Prefer not to scan? Close this and use <b>Log words</b> with a rough count.</p>
     <button class="btn primary" type="button" id="paperSave">Save page and count the words</button>
   </div>
 </div>
@@ -965,7 +980,12 @@ const photoDB = {
   del(k) { return this.run("readwrite", s => s.delete(k)).catch(() => {}); }
 };
 let paperBlob = null, photoUrl = null;
-function openPaper() { $("#paperText").value = ""; $("#paperWc").textContent = "0"; paperBlob = null; $("#paperPrev").hidden = true; $("#paperModal").hidden = false; }
+function openPaper() {
+  $("#paperText").value = ""; $("#paperWc").textContent = "0"; paperBlob = null; $("#paperShot").hidden = true;
+  const ios = isIOS(), and = /Android/i.test(navigator.userAgent);
+  $("#howIos").open = ios || !and; $("#howAnd").open = and;
+  $("#paperModal").hidden = false;
+}
 function shrink(file) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), img = new Image();
@@ -983,14 +1003,22 @@ async function showPhoto(n) {
 $("#notePhoto").addEventListener("click", e => { if (e.target.tagName === "IMG") e.target.classList.toggle("big"); });
 $("#paperBtn").addEventListener("click", openPaper);
 $("#paperText").addEventListener("input", () => { $("#paperWc").textContent = fmt(wc($("#paperText").value)); });
-$("#paperPaste").addEventListener("click", async () => {
+const pastePaper = async () => {
   try { const t = await navigator.clipboard.readText(); if (!t.trim()) { toast("Nothing to paste yet. Copy the text from Camera or Photos first."); return; }
     const ta = $("#paperText"); ta.value = (ta.value.trim() ? ta.value.trim() + "\n\n" : "") + t.trim(); $("#paperWc").textContent = fmt(wc(ta.value)); }
   catch (e) { $("#paperText").focus(); toast("Tap the box, tap it again, then tap Paste."); }
-});
+};
+$("#paperPaste").addEventListener("click", pastePaper);
+$("#paperPaste2").addEventListener("click", pastePaper);
 $("#paperPhoto").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  try { paperBlob = await shrink(f); const p = $("#paperPrev"); p.src = URL.createObjectURL(paperBlob); p.hidden = false; }
+  try {
+    paperBlob = await shrink(f); const p = $("#paperPrev"); p.src = URL.createObjectURL(f); $("#paperShot").hidden = false;
+    $("#paperTip").innerHTML = /Android/i.test(navigator.userAgent)
+      ? "Photo added. Open the same photo in Google Lens, tap <b>Text › Select all › Copy</b>, then tap <b>📋 Paste text</b>."
+      : "Now <b>press and hold the writing</b> in this photo, tap <b>Select All</b>, then <b>Copy</b>, then tap <b>📋 Paste text</b>.";
+    setTimeout(() => $("#paperShot").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }
   catch (err) { toast("Couldn't read that photo. Try another one, or skip the photo."); }
 });
 $("#paperSave").addEventListener("click", async () => {
