@@ -196,6 +196,12 @@ body.focus main{padding-block:8px}
 .rw .mini i{display:block;height:100%;background:var(--orange)}
 .words{display:flex;flex-wrap:wrap;gap:6px}
 .words span{background:var(--green-t);color:var(--ink);border-radius:999px;padding:4px 10px;font-weight:800}
+#notePhoto{padding:12px 14px 0;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+#notePhoto img{max-width:min(220px,100%);max-height:240px;border-radius:12px;border:2px solid var(--line);cursor:zoom-in}
+#notePhoto img.big{max-width:100%;max-height:none;cursor:zoom-out}
+.paper-steps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14.5px}
+#paperText{width:100%;min-height:150px;border:2px solid var(--line);border-radius:14px;padding:12px;font:400 17px/1.6 var(--serif);background:var(--paper);resize:vertical}
+#paperPrev{max-width:100%;max-height:200px;border-radius:12px;border:2px solid var(--line)}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -224,6 +230,26 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
       <span class="chip num" title="Words today"><span aria-hidden="true">✍️</span><span id="hWords">0</span></span>
       <span class="chip hot num" title="Streak"><span aria-hidden="true">🔥</span><span id="hStreak">0</span></span>
     </div>
+    <details class="smenu"><summary aria-label="Menu">☰</summary>
+  <div class="smenu-panel">
+    <div><p class="smenu-h">Free on the web</p><a href="../write/">Write and track words</a><a href="../write/#paper">Count a paper page</a><a href="../wrapped/">Writing Wrapped</a><a href="../guide/">Use your notes with AI</a></div>
+    <div><p class="smenu-h">The app</p><a href="../#features">How it works</a><a href="../#pricing">Pricing</a><a href="../write/#get-app">iPhone and Android</a><a href="../support.html">Help</a><a href="../privacy.html">Privacy</a></div>
+    <div><p class="smenu-h">Guides</p><a href="../journal-prompts.html">228 journal prompts</a><a href="../journaling.html">Journaling</a><a href="../handwritten-journal.html">Handwritten journals</a><a href="../writers.html">For writers</a><a href="../students.html">For students</a></div>
+  </div>
+</details>
+<style>
+.smenu{position:relative;flex:none}
+.smenu summary{list-style:none;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:2px solid var(--line);font-size:20px;line-height:1;color:var(--ink);background:var(--card,var(--panel))}
+.smenu summary::-webkit-details-marker{display:none}
+.smenu-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:40;background:var(--card,var(--panel));border:2px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.18);padding:16px 18px;display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:14px 22px;width:max-content;max-width:calc(100vw - 32px)}
+.smenu-panel div{display:grid;gap:6px;align-content:start}
+.smenu-panel a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
+.smenu-panel a:hover{text-decoration:underline}
+.smenu-h{font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 2px}
+@media (max-width:700px){.smenu-panel{position:fixed;left:16px;right:16px;top:calc(64px + env(safe-area-inset-top,0px));width:auto;max-width:none;grid-template-columns:1fr 1fr;max-height:calc(100vh - 90px);overflow:auto}.smenu-panel div:last-child{grid-column:1/-1}}
+</style>
+<script>document.addEventListener("click",function(e){document.querySelectorAll(".smenu[open]").forEach(function(d){if(!d.contains(e.target)||e.target.closest(".smenu-panel a"))d.open=false;});});</script>
+
   </div></div>
 </header>
 
@@ -242,6 +268,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <label for="logN" class="soft" style="font-size:13px;font-weight:800">Wrote somewhere else?</label>
         <input id="logN" type="number" inputmode="numeric" min="1" max="100000" placeholder="Words">
         <button class="btn primary" type="submit">Log words</button>
+        <button class="btn" type="button" id="paperBtn">✍️ Add a paper page</button>
       </form>
     </div>
 
@@ -258,9 +285,10 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <div class="ed-top">
           <input id="title" type="text" placeholder="Untitled" aria-label="Note title">
           <select id="tag" aria-label="Category">
-            <option value="">No category</option><option>Novel</option><option>Journal</option><option>Blog</option><option>Poetry</option><option>Work</option><option>Other</option>
+            <option value="">No category</option><option>Novel</option><option>Journal</option><option>Blog</option><option>Poetry</option><option>Work</option><option>Handwritten</option><option>Imported</option><option>Other</option>
           </select>
         </div>
+        <div id="notePhoto" hidden></div>
         <textarea id="body" placeholder="Start writing. Every word you type here counts." aria-label="Note text" spellcheck="true"></textarea>
         <div class="ed-foot">
           <span class="num"><b id="noteWc">0</b> words in this note</span>
@@ -326,7 +354,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 
     <div class="card">
       <h2>Your data</h2>
-      <p class="soft" style="font-size:14px;max-width:65ch">Everything stays in this browser on this device. Nothing is sent to us. Clearing your browser data deletes it, so download a backup now and then. You can load the backup on another computer or phone.</p>
+      <p class="soft" style="font-size:14px;max-width:65ch">Everything stays in this browser on this device. Nothing is sent to us. Photos of paper pages stay on this device and aren't in the backup. Clearing your browser data deletes it, so download a backup now and then. You can load the backup on another computer or phone.</p>
       <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
         <button class="btn" id="expJson" type="button">Download backup</button>
         <button class="btn" id="expTxt" type="button">Download notes as text</button>
@@ -388,6 +416,24 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <img id="shareImg" alt="Your writing card">
     <p class="soft" style="font-size:13px">Press and hold (or right-click) the image to save it if the buttons don't work in your browser.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="shareDl" type="button">Download</button><button class="btn" id="shareNative" type="button" hidden>Share</button></div>
+  </div>
+</div>
+<div class="modal" id="paperModal" hidden role="dialog" aria-modal="true" aria-labelledby="paperH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="paperH" style="flex:1">Add a paper page</h2><button class="btn small ghost" type="button" data-close="paperModal">Close</button></div>
+    <p class="soft" style="font-size:14px">Wrote in a notebook? Turn the page into text with your phone's own scanner, and the words count toward today. Nothing is uploaded.</p>
+    <ol class="paper-steps">
+      <li><b>iPhone:</b> tap the box below, then tap <b>Scan Text</b> (the bracketed lines icon above the keyboard, or press and hold the box) and point at your page.</li>
+      <li><b>Android:</b> use your keyboard's camera or <b>Google Lens</b> button if it has one, or open Google Lens, select the text, copy it and paste it here.</li>
+      <li>Fix any words it misread. Prefer not to? Use <b>Log words</b> with a rough count instead.</li>
+    </ol>
+    <textarea id="paperText" placeholder="Scanned text appears here…" aria-label="Text from your paper page"></textarea>
+    <p class="soft num" style="font-size:14px"><b id="paperWc">0</b> words</p>
+    <label class="btn" for="paperPhoto" style="cursor:pointer">📷 Keep a photo of the page (optional)</label>
+    <input id="paperPhoto" type="file" accept="image/*" capture="environment" hidden>
+    <img id="paperPrev" alt="Your paper page" hidden>
+    <p class="soft" style="font-size:12.5px">The photo stays on this device only. It isn't in backups.</p>
+    <button class="btn primary" type="button" id="paperSave">Save page and count the words</button>
   </div>
 </div>
 <div class="modal" id="receiptModal" hidden role="dialog" aria-modal="true" aria-labelledby="receiptH">
@@ -472,7 +518,7 @@ function save() {
 
 // ---- Words per day ----
 const day = k => S.days[k] || (S.days[k] = { typed: 0, logged: 0 });
-const total = k => { const d = S.days[k]; return d ? (+d.typed || 0) + (+d.logged || 0) : 0; };
+const total = k => { const d = S.days[k]; return d ? (+d.typed || 0) + (+d.logged || 0) + (+d.paper || 0) : 0; };
 let sprint = null;
 async function askPersist() {
   if (S.persisted || askPersist.asked) return; askPersist.asked = true;
@@ -525,9 +571,10 @@ function chInfo() {
 const views = ["write", "progress", "get-app"];
 function route() {
   let v = (location.hash || "#write").slice(1);
+  if (v === "paper") { v = "write"; setTimeout(openPaper, 50); try { history.replaceState(null, "", "#write"); } catch (e) {} }
   if (!views.includes(v)) v = "write";
   views.forEach(x => { $("#v-" + x).hidden = x !== v; });
-  document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+  document.querySelectorAll("nav[aria-label=Sections] a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "progress") renderProgress();
 }
 function renderCounts() {
@@ -566,6 +613,7 @@ function openNote(id) {
   S.activeId = id; const n = activeNote();
   $("#title").value = n ? n.title : ""; $("#body").value = n ? n.body : ""; $("#tag").value = n ? n.tag || "" : "";
   lastWc = wc(n ? n.body : "");
+  showPhoto(n);
   renderNotes(); renderCounts(); save();
 }
 function newNote() {
@@ -817,7 +865,7 @@ $("#delNote").addEventListener("click", e => {
   const btn = e.currentTarget;
   if (!delArm) { delArm = setTimeout(() => { delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm"); }, 3000); btn.textContent = "Tap again to delete"; btn.classList.add("confirm"); return; }
   clearTimeout(delArm); delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm");
-  const n = activeNote(); if (n) { n.deleted = true; n.updatedAt = Date.now(); n.body = ""; n.title = ""; }
+  const n = activeNote(); if (n) { if (n.photo) photoDB.del(n.id); n.deleted = true; n.photo = false; n.updatedAt = Date.now(); n.body = ""; n.title = ""; }
   S.activeId = null; ensureNote(); toast("Note deleted"); save();
 });
 $("#sprintBox").addEventListener("click", e => {
@@ -833,7 +881,7 @@ $("#focusBtn").addEventListener("click", () => {
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
-  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; }
+  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
 });
 $("#logForm").addEventListener("submit", e => {
@@ -901,6 +949,53 @@ window.addEventListener("storage", e => { if (e.key === KEY) { S = load(); ensur
 let lastDay = dayKey();
 setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); renderCounts(); if (!$("#v-progress").hidden) renderProgress(); } }, 30000);
 
+// ---- Paper pages ----
+const photoDB = {
+  db: null,
+  open() { if (!this.db) this.db = new Promise((res, rej) => { try { const r = indexedDB.open("inkstreak-photos", 1); r.onupgradeneeded = () => r.result.createObjectStore("p"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); return this.db; },
+  async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction("p", mode), st = tx.objectStore("p"), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); }); },
+  put(k, v) { return this.run("readwrite", s => s.put(v, k)); },
+  get(k) { return this.run("readonly", s => s.get(k)); },
+  del(k) { return this.run("readwrite", s => s.delete(k)).catch(() => {}); }
+};
+let paperBlob = null, photoUrl = null;
+function openPaper() { $("#paperText").value = ""; $("#paperWc").textContent = "0"; paperBlob = null; $("#paperPrev").hidden = true; $("#paperModal").hidden = false; setTimeout(() => $("#paperText").focus(), 60); }
+function shrink(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(b => b ? res(b) : rej(new Error("photo")), "image/jpeg", 0.78); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("photo")); };
+    img.src = url;
+  });
+}
+async function showPhoto(n) {
+  const box = $("#notePhoto"); if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
+  if (!n || !n.photo) { box.hidden = true; box.innerHTML = ""; return; }
+  try { const b = await photoDB.get(n.id); if (!b || S.activeId !== n.id) { box.hidden = true; return; } photoUrl = URL.createObjectURL(b); box.innerHTML = `<img src="${photoUrl}" alt="Photo of your paper page" title="Tap to enlarge">`; box.hidden = false; }
+  catch (e) { box.hidden = true; }
+}
+$("#notePhoto").addEventListener("click", e => { if (e.target.tagName === "IMG") e.target.classList.toggle("big"); });
+$("#paperBtn").addEventListener("click", openPaper);
+$("#paperText").addEventListener("input", () => { $("#paperWc").textContent = fmt(wc($("#paperText").value)); });
+$("#paperPhoto").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { paperBlob = await shrink(f); const p = $("#paperPrev"); p.src = URL.createObjectURL(paperBlob); p.hidden = false; }
+  catch (err) { toast("Couldn't read that photo. Try another one, or skip the photo."); }
+});
+$("#paperSave").addEventListener("click", async () => {
+  const text = $("#paperText").value.trim(), n = wc(text);
+  if (!n && !paperBlob) { toast("Scan or type the page first, or add a photo."); return; }
+  if (n > 20000) { toast("That's more than a page. Split it into a few pages."); return; }
+  askPersist();
+  const now = Date.now(), d = new Date();
+  const note = { id: uuid(), title: `Paper page · ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`, body: text, tag: "Handwritten", createdAt: now, updatedAt: now, deleted: false, photo: false };
+  if (paperBlob) { try { await photoDB.put(note.id, paperBlob); note.photo = true; } catch (e) { toast("Couldn't keep the photo on this device. The text is saved."); } }
+  S.notes.push(note);
+  const dd = day(dayKey()); dd.paper = (+dd.paper || 0) + n; dd.updatedAt = now;
+  $("#paperModal").hidden = true; openNote(note.id); save();
+  toast(n ? `Saved. ${fmt(n)} handwritten words added to today.` : "Photo saved. Add the text later to count the words.");
+});
+
 // ---- Human receipt ----
 function dur(ms) { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h ? `${h}h ${m}m` : `${m}m ${pad(s % 60)}s`; }
 let rcCanvas = null;
@@ -944,6 +1039,7 @@ async function makeReceipt(n) {
 }
 async function openReceipt() {
   const n = activeNote();
+  if (n && n.tag === "Handwritten" && !(n.proof && n.proof.typed >= 20)) { toast("This page was handwritten, so it has no typing receipt. Your paper is the proof."); return; }
   if (!n || !n.proof || n.proof.typed < 20) { toast("Type at least 20 words in this note first. Your receipt counts what you type from now on."); return; }
   $("#receiptModal").hidden = false;
   rcCanvas = await makeReceipt(n); $("#receiptImg").src = rcCanvas.toDataURL("image/png");

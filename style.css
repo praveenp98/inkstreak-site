@@ -33,9 +33,25 @@ h3{font-size:19px;font-weight:700}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:21px;color:var(--green);letter-spacing:-.01em}
 .brand:hover{text-decoration:none}
 .brand i{font-style:normal;color:var(--soft)}
-.top nav{display:flex;gap:22px;margin-left:auto}
-.top nav a{color:var(--ink);font-weight:600;font-size:15px}
-@media(max-width:720px){.top nav{display:none}.top .btn{margin-left:auto}}
+.top .main-nav{display:flex;gap:20px;margin-left:auto}
+.top .main-nav a{color:var(--ink);font-weight:600;font-size:15px}
+.menu{position:relative;border:none;padding:0}
+.menu summary:after,.menu[open] summary:after{content:none}
+.menu summary{list-style:none;cursor:pointer;font-weight:600;font-size:15px;padding:8px 10px;border-radius:12px;display:flex;align-items:center;gap:6px;user-select:none}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary:hover{background:var(--tint)}
+.menu summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.menu-burger{display:none;font-size:22px;line-height:1}
+.menu-more::after{content:" ▾";font-size:12px}
+.menu-panel{position:absolute;right:0;top:calc(100% + 10px);background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.12);padding:20px 22px;display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:18px 26px;width:max-content;max-width:calc(100vw - 32px);z-index:20}
+.menu-panel div{display:grid;gap:6px;align-content:start}
+.menu-panel a{color:var(--ink);font-size:15px;font-weight:600}
+.menu-h{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-d);margin-bottom:2px}
+@media(max-width:900px){.top .main-nav{display:none}.menu{margin-left:auto}.menu-more{display:none}.menu-burger{display:inline}
+  .menu-panel{position:fixed;left:16px;right:16px;top:74px;width:auto;max-width:none;grid-template-columns:1fr 1fr;max-height:calc(100vh - 96px);overflow:auto}
+  .menu-panel div:last-child{grid-column:1/-1;grid-template-columns:1fr 1fr;column-gap:20px}
+  .menu-panel div:last-child .menu-h{grid-column:1/-1}}
+@media(max-width:420px){.top-row{gap:10px}.top-cta{padding:8px 12px;font-size:14px}.brand i{display:none}}
 
 /* hero */
 .hero{padding:70px 0 40px;background:linear-gradient(180deg,var(--tint),#fff)}

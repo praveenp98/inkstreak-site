@@ -128,7 +128,26 @@ textarea:focus{border-color:var(--blue);outline:none}
   </symbol>
 </svg>
 <div class="page">
-  <div class="top"><a class="brand" href="../"><svg><use href="#inky"/></svg>inkstreak</a><a class="skip" href="../write/">Just write →</a></div>
+  <div class="top"><a class="brand" href="../"><svg><use href="#inky"/></svg>inkstreak</a><a class="skip" href="../write/">Just write →</a><details class="smenu"><summary aria-label="Menu">☰</summary>
+  <div class="smenu-panel">
+    <div><p class="smenu-h">Free on the web</p><a href="../write/">Write and track words</a><a href="../write/#paper">Count a paper page</a><a href="../wrapped/">Writing Wrapped</a><a href="../guide/">Use your notes with AI</a></div>
+    <div><p class="smenu-h">The app</p><a href="../#features">How it works</a><a href="../#pricing">Pricing</a><a href="../write/#get-app">iPhone and Android</a><a href="../support.html">Help</a><a href="../privacy.html">Privacy</a></div>
+    <div><p class="smenu-h">Guides</p><a href="../journal-prompts.html">228 journal prompts</a><a href="../journaling.html">Journaling</a><a href="../handwritten-journal.html">Handwritten journals</a><a href="../writers.html">For writers</a><a href="../students.html">For students</a></div>
+  </div>
+</details>
+<style>
+.smenu{position:relative;flex:none}
+.smenu summary{list-style:none;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:2px solid var(--line);font-size:20px;line-height:1;color:var(--ink);background:var(--card,var(--panel))}
+.smenu summary::-webkit-details-marker{display:none}
+.smenu-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:40;background:var(--card,var(--panel));border:2px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.18);padding:16px 18px;display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:14px 22px;width:max-content;max-width:calc(100vw - 32px)}
+.smenu-panel div{display:grid;gap:6px;align-content:start}
+.smenu-panel a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
+.smenu-panel a:hover{text-decoration:underline}
+.smenu-h{font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 2px}
+@media (max-width:700px){.smenu-panel{position:fixed;left:16px;right:16px;top:calc(64px + env(safe-area-inset-top,0px));width:auto;max-width:none;grid-template-columns:1fr 1fr;max-height:calc(100vh - 90px);overflow:auto}.smenu-panel div:last-child{grid-column:1/-1}}
+</style>
+<script>document.addEventListener("click",function(e){document.querySelectorAll(".smenu[open]").forEach(function(d){if(!d.contains(e.target)||e.target.closest(".smenu-panel a"))d.open=false;});});</script>
+</div>
 
   <!-- START -->
   <section id="start">

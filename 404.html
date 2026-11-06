@@ -23,8 +23,15 @@
 <body>
 <header class="top"><div class="wrap top-row">
   <a class="brand" href="./"><img src="inky.png" alt="" width="34" height="34"><span>inkstreak<i>.app</i></span></a>
-  <nav aria-label="Main"><a href="index.html#features">How it works</a><a href="journal-prompts.html">Prompts</a><a href="handwritten-journal.html">Paper journals</a><a href="index.html#pricing">Pricing</a><a href="support.html">Help</a></nav>
-  <a class="btn small" href="write/">Start writing</a>
+  <nav aria-label="Main" class="main-nav"><a href="write/">Write</a><a href="wrapped/">Wrapped</a><a href="guide/">AI guide</a><a href="journal-prompts.html">Prompts</a><a href="index.html#pricing">Pricing</a></nav>
+  <details class="menu"><summary aria-label="Menu"><span class="menu-more">More</span><span class="menu-burger" aria-hidden="true">☰</span></summary>
+    <div class="menu-panel">
+      <div><p class="menu-h">Free on the web</p><a href="write/">Write and track words</a><a href="write/#paper">Count a paper page</a><a href="wrapped/">Writing Wrapped</a><a href="guide/">Use your notes with AI</a></div>
+      <div><p class="menu-h">The app</p><a href="index.html#features">How it works</a><a href="index.html#pricing">Pricing</a><a href="write/#get-app">iPhone and Android</a><a href="support.html">Help</a><a href="privacy.html">Privacy</a></div>
+      <div><p class="menu-h">Guides</p><a href="journal-prompts.html">228 journal prompts</a><a href="journaling.html">Journaling</a><a href="handwritten-journal.html">Handwritten journals</a><a href="writers.html">For writers</a><a href="students.html">For students</a><a href="voice-to-text.html">Voice to text</a><a href="typing-stats.html">Word counter keyboard</a></div>
+    </div>
+  </details>
+  <a class="btn small top-cta" href="write/">Start writing</a>
 </div></header>
 <main>
 <section class="section"><div class="wrap center"><img src="inky.png" alt="" width="120" height="120"><h1>Oops — this page wandered off.</h1><p><a class="btn" href="./">Back to Inkstreak</a></p></div></section>
@@ -51,5 +58,6 @@
 if(tz==="Asia/Kolkata"||tz==="Asia/Calcutta"){document.querySelectorAll("[data-inr]").forEach(function(el){el.textContent=el.getAttribute("data-inr");});
 document.documentElement.classList.add("in");}}catch(e){}})();
 </script>
+<script id="menu-close">document.querySelectorAll(".menu a").forEach(function(a){a.addEventListener("click",function(){var d=a.closest("details");if(d)d.open=false;});});document.addEventListener("click",function(e){document.querySelectorAll(".menu[open]").forEach(function(d){if(!d.contains(e.target))d.open=false;});});</script>
 </body>
 </html>
