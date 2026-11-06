@@ -426,7 +426,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 <div class="modal" id="paperModal" hidden role="dialog" aria-modal="true" aria-labelledby="paperH">
   <div class="sheet">
     <div style="display:flex;align-items:center;gap:8px"><h2 id="paperH" style="flex:1">Add a paper page</h2><button class="btn small ghost" type="button" data-close="paperModal">Close</button></div>
-    <p class="soft" style="font-size:14px">Turn a notebook page into text. Your phone reads the handwriting, the words count toward today, and nothing is uploaded.</p>
+    <p class="soft" style="font-size:14px">Choose a photo of your page and the text is read right on your phone. Nothing is uploaded. Fix any words it gets wrong, then save.</p>
     <div class="paper-pick">
       <label class="btn primary" for="paperPhoto" style="cursor:pointer">🖼️ Choose a photo of the page</label>
       <button class="btn" type="button" id="paperPaste">📋 Paste text</button>
@@ -435,6 +435,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <div id="paperShot" hidden>
       <img id="paperPrev" alt="Your paper page. Press and hold the writing to copy it.">
       <p class="paper-tip" id="paperTip"></p>
+      <div id="ocrBar" class="bar" hidden style="margin-top:8px"><i id="ocrFill" style="width:0%"></i></div>
       <button class="btn primary" type="button" id="paperPaste2" style="width:100%;margin-top:8px">📋 Paste text</button>
     </div>
     <textarea id="paperText" placeholder="The text from your page goes here" aria-label="Text from your paper page"></textarea>
@@ -1003,6 +1004,39 @@ async function showPhoto(n) {
 $("#notePhoto").addEventListener("click", e => { if (e.target.tagName === "IMG") e.target.classList.toggle("big"); });
 $("#paperBtn").addEventListener("click", openPaper);
 $("#paperText").addEventListener("input", () => { $("#paperWc").textContent = fmt(wc($("#paperText").value)); });
+const fallbackTip = () => /Android/i.test(navigator.userAgent)
+  ? "Words wrong? Open this photo in <b>Google Lens</b>, tap <b>Text › Select all › Copy</b>, then tap <b>📋 Paste text</b>."
+  : "Words wrong? Your iPhone reads handwriting better: <b>press and hold the writing</b> in the photo, tap <b>Select All › Copy</b>, then tap <b>📋 Paste text</b>.";
+let ocrLib = null, ocrBusy = false;
+function loadOcr() {
+  if (window.Tesseract) return Promise.resolve();
+  if (!ocrLib) ocrLib = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"; sc.onload = res; sc.onerror = () => { ocrLib = null; rej(new Error("load")); }; document.head.appendChild(sc); });
+  return ocrLib;
+}
+async function readPhoto(blob) {
+  if (ocrBusy) return; ocrBusy = true;
+  const tip = $("#paperTip"), bar = $("#ocrBar"), fill = $("#ocrFill");
+  tip.innerHTML = "Reading your page… (the first time downloads the reader, about 10 MB)"; bar.hidden = false; fill.style.width = "4%";
+  let worker = null;
+  try {
+    await loadOcr();
+    worker = await Tesseract.createWorker("eng", 1, { logger: m => {
+      if (m.status === "recognizing text") { fill.style.width = Math.round(30 + m.progress * 70) + "%"; tip.textContent = `Reading your page… ${Math.round(m.progress * 100)}%`; }
+      else if (typeof m.progress === "number") fill.style.width = Math.round(4 + m.progress * 26) + "%";
+    } });
+    const { data } = await worker.recognize(blob);
+    const text = (data && data.text || "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    if (wc(text) >= 2) {
+      const ta = $("#paperText"); ta.value = (ta.value.trim() ? ta.value.trim() + "\n\n" : "") + text; $("#paperWc").textContent = fmt(wc(ta.value));
+      tip.innerHTML = `Found ${fmt(wc(text))} words. Check them in the box below. ` + fallbackTip();
+    } else tip.innerHTML = "Couldn't read words in this photo. " + fallbackTip();
+  } catch (e) {
+    tip.innerHTML = "Couldn't read the photo automatically (check your connection). " + fallbackTip();
+  } finally {
+    bar.hidden = true; ocrBusy = false;
+    if (worker) { try { await worker.terminate(); } catch (e) {} }
+  }
+}
 const pastePaper = async () => {
   try { const t = await navigator.clipboard.readText(); if (!t.trim()) { toast("Nothing to paste yet. Copy the text from Camera or Photos first."); return; }
     const ta = $("#paperText"); ta.value = (ta.value.trim() ? ta.value.trim() + "\n\n" : "") + t.trim(); $("#paperWc").textContent = fmt(wc(ta.value)); }
@@ -1014,10 +1048,8 @@ $("#paperPhoto").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
     paperBlob = await shrink(f); const p = $("#paperPrev"); p.src = URL.createObjectURL(f); $("#paperShot").hidden = false;
-    $("#paperTip").innerHTML = /Android/i.test(navigator.userAgent)
-      ? "Photo added. Open the same photo in Google Lens, tap <b>Text › Select all › Copy</b>, then tap <b>📋 Paste text</b>."
-      : "Now <b>press and hold the writing</b> in this photo, tap <b>Select All</b>, then <b>Copy</b>, then tap <b>📋 Paste text</b>.";
     setTimeout(() => $("#paperShot").scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    readPhoto(paperBlob);
   }
   catch (err) { toast("Couldn't read that photo. Try another one, or skip the photo."); }
 });
@@ -1182,7 +1214,7 @@ renderApp(); ensureNote(); openNote(S.activeId); renderSprint(); renderSaved(); 
 })();
 </script>
 <script>
-if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {})); }
 </script>
 </body>
 </html>
