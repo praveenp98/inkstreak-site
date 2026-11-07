@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Inkstreak</title>
+<script>
+// Tracked links for posts: inkstreak.app/go/?c=<post id>&to=write|wrapped|guide|home&s=<platform>
+// Sends the visitor on with utm_ tags so Umami can show which post brought them.
+(function () {
+  var q = new URLSearchParams(location.search);
+  var pages = { write: "/write/", wrapped: "/wrapped/", guide: "/guide/", home: "/", paper: "/write/#paper", notes: "/write/#notes", app: "/write/#get-app" };
+  var dest = pages[(q.get("to") || "write").toLowerCase()] || "/write/";
+  var clean = function (v, d) { return (v || d).toLowerCase().replace(/[^a-z0-9_\-]/g, "").slice(0, 40) || d; };
+  var ref = document.referrer || "";
+  var guess = /instagram/.test(ref) ? "instagram" : /threads/.test(ref) ? "threads" : /youtube|youtu\.be/.test(ref) ? "youtube" : /t\.co|twitter|x\.com/.test(ref) ? "x" : /facebook|fb\./.test(ref) ? "facebook" : /whatsapp/.test(ref) ? "whatsapp" : /linkedin/.test(ref) ? "linkedin" : "link";
+  var u = new URL(dest, location.origin);
+  u.searchParams.set("utm_source", clean(q.get("s"), guess));
+  u.searchParams.set("utm_medium", "social");
+  u.searchParams.set("utm_campaign", clean(q.get("c"), "unknown"));
+  location.replace(u.pathname + u.search + u.hash);
+})();
+</script>
+<meta http-equiv="refresh" content="1;url=/write/">
+</head>
+<body style="font-family:system-ui,sans-serif;padding:24px">Opening Inkstreak… <a href="/write/">Tap here if nothing happens</a>.</body>
+</html>
