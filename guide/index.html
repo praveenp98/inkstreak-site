@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://inkstreak.app/write/og.png">
 <meta property="og:url" content="https://inkstreak.app/guide/">
 <meta name="twitter:card" content="summary_large_image">
-<script defer data-website-id="dfid_KUDrv3UsUARsq1eUgd1q2" data-domain="inkstreak.app" src="https://datafa.st/js/script.cookieless.js"></script>
+
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>What Your Words Can Do</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -188,7 +188,7 @@ const $ = s => document.querySelector(s);
 const fmt = n => Math.round(n).toLocaleString();
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const wc = s => (String(s || "").match(/\S+/g) || []).length;
-const track = g => { try { window.datafast && window.datafast(g); } catch (e) {} };
+const track = g => { try { window.umami && window.umami.track(g); } catch (e) {} };
 function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3600); }
 
 const BASE = "Below are my own notes and journal entries, oldest first. Work only from what I actually wrote. Quote my exact words (with dates where they exist) to back up every point. Don't rewrite, polish or add to my writing, and don't give me generic advice. If something isn't in my notes, say so.";

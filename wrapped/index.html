@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://inkstreak.app/wrapped/og.png">
 <meta property="og:url" content="https://inkstreak.app/wrapped/">
 <meta name="twitter:card" content="summary_large_image">
-<script defer data-website-id="dfid_KUDrv3UsUARsq1eUgd1q2" data-domain="inkstreak.app" src="https://datafa.st/js/script.cookieless.js"></script>
+
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Writing Wrapped</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -213,7 +213,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const pad = n => String(n).padStart(2, "0");
 const KEY = "inkstreak.wrapped.v1", NOTES_KEY = "inkstreak.web.v1";
-const track = g => { try { window.datafast && window.datafast(g); } catch (e) {} };
+const track = g => { try { window.umami && window.umami.track(g); } catch (e) {} };
 function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3400); }
 function show(id) { ["start","howto","who","added","show"].forEach(x => $("#" + x).hidden = x !== id); window.scrollTo(0, 0); }
 function err(t) { const e = $("#err"); e.textContent = t || ""; e.hidden = !t; }
