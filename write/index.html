@@ -325,7 +325,8 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <textarea id="body" placeholder="Start writing. Every word you type here counts." aria-label="Note text" spellcheck="true"></textarea>
         <div class="ed-foot">
           <span class="num"><b id="noteWc">0</b> words in this note</span>
-          <span class="grow soft" id="saved">Saved in this browser</span>
+          <span class="grow soft" id="saved" aria-live="polite">Saves as you type</span>
+          <button class="btn small primary" id="saveBtn" type="button">✓ Save</button>
           <div class="sprint" id="sprintBox"></div>
           <button class="btn small" id="replayBtn" type="button">▶ Replay video</button>
           <button class="btn small" id="receiptBtn" type="button">🧾 Human receipt</button>
@@ -679,8 +680,10 @@ function renderCounts() {
   const n = activeNote(); if (n) $("#noteWc").textContent = fmt(wc(n.body));
   renderSprint();
 }
+let lastSavedAt = 0;
 function renderSaved() {
-  $("#saved").textContent = storageOK ? "Saved in this browser" : "Not saved: this browser blocks storage. Copy your text somewhere safe.";
+  if (storageOK) lastSavedAt = Date.now();
+  $("#saved").textContent = storageOK ? `Saved ${new Date(lastSavedAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })} · on this device` : "Not saved: this browser blocks storage. Copy your text somewhere safe.";
   $("#saved").style.color = storageOK ? "" : "var(--red)";
 }
 
@@ -969,7 +972,7 @@ $("#focusBtn").addEventListener("click", () => {
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
   if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; closeReplay(); }
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); saveNow(); }
 });
 $("#logForm").addEventListener("submit", e => {
   e.preventDefault();
@@ -1163,6 +1166,20 @@ $("#paperSave").addEventListener("click", async () => {
   $("#paperModal").hidden = true; openNote(note.id); save();
   toast(n ? `Saved. ${fmt(n)} handwritten words added to today.` : "Photo saved. Add the text later to count the words.");
 });
+
+// ---- Save button ----
+function saveNow() {
+  const n = activeNote();
+  if (n) { n.title = $("#title").value; n.body = $("#body").value; n.tag = $("#tag").value; n.updatedAt = Date.now(); }
+  clearTimeout(saveT);
+  try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
+  saveRecs(); renderSaved(); renderNotes(); askPersist();
+  if (!storageOK) { toast("This browser blocked saving. Copy your text somewhere safe."); return; }
+  const b = $("#saveBtn"); b.textContent = "✓ Saved"; clearTimeout(saveNow.t); saveNow.t = setTimeout(() => b.textContent = "✓ Save", 1600);
+  toast(n && wc(n.body) ? `Saved "${noteTitle(n)}". Find it any time in Notes.` : "Saved.");
+  if (document.activeElement && document.activeElement.blur && isTouch()) document.activeElement.blur();
+}
+$("#saveBtn").addEventListener("click", saveNow);
 
 // ---- Writing replay ----
 const REC = {};
