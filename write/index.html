@@ -562,6 +562,8 @@ const weekKey = d => dayKey(addDays(d, -((d.getDay()+6) % 7)));
 const wc = s => (String(s || "").match(/\S+/g) || []).length;
 const fmt = n => Math.round(n).toLocaleString();
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
+const track = (g, once) => { try { if (once) { if (track.done[g]) return; track.done[g] = 1; } window.umami && window.umami.track(g); } catch (e) {} };
+track.done = {};
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 const WELCOME = "This is your page. Every word you type here counts toward today's words and your streak.\n\nWrote somewhere else today, in another app or on paper? Use Log words on the Progress tab to add it.\n\nYour notes stay in this browser. Nothing is sent anywhere. Download a backup from Progress now and then.\n\nDelete this note whenever you like and start your own.";
@@ -614,7 +616,7 @@ async function askPersist() {
   try { if (navigator.storage && navigator.storage.persist) { S.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist()); save(); } } catch (e) {}
 }
 function addTyped(n) {
-  askPersist();
+  askPersist(); track("write_words", true);
   const d = day(dayKey()); d.typed = (+d.typed || 0) + n; d.updatedAt = Date.now();
   if (sprint) sprint.words += n;
   save(); renderCounts();
@@ -817,7 +819,7 @@ async function signup(e, list, inSel, msgSel) {
     if (!r.ok) throw new Error(r.status);
     const j = await r.json().catch(() => ({}));
     if (j.success === false || j.success === "false") throw new Error("not active");
-    S.signups[list] = Date.now(); save();
+    S.signups[list] = Date.now(); save(); track("signup_" + list);
     msg.className = "msg ok";
     msg.textContent = list === "android-beta" ? "You're on the list. Watch that Gmail inbox for the Play Store test invite." : "Done. We'll email you once, the day it's live.";
     $(inSel).value = "";
@@ -884,6 +886,7 @@ async function makeCard() {
 }
 let cardCanvas = null;
 async function openShare() {
+  track("share_card");
   $("#shareModal").hidden = false;
   document.querySelectorAll("#shareModal [data-size]").forEach(b => b.classList.toggle("primary", b.dataset.size === cardSize));
   cardCanvas = await makeCard();
@@ -1172,7 +1175,7 @@ $("#paperSave").addEventListener("click", async () => {
   const now = Date.now(), d = new Date();
   const note = { id: uuid(), title: `Paper page · ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`, body: text, tag: "Handwritten", createdAt: now, updatedAt: now, deleted: false, photo: false };
   if (paperBlob) { try { await photoDB.put(note.id, paperBlob); note.photo = true; } catch (e) { toast("Couldn't keep the photo on this device. The text is saved."); } }
-  S.notes.push(note);
+  S.notes.push(note); track("paper_page");
   const dd = day(dayKey()); dd.paper = (+dd.paper || 0) + n; dd.updatedAt = now;
   $("#paperModal").hidden = true; openNote(note.id); save();
   toast(n ? `Saved. ${fmt(n)} handwritten words added to today.` : "Photo saved. Add the text later to count the words.");
@@ -1186,6 +1189,7 @@ function saveNow() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
   saveRecs(); renderSaved(); renderNotes(); askPersist();
   if (!storageOK) { toast("This browser blocked saving. Copy your text somewhere safe."); return; }
+  track("note_saved");
   const b = $("#saveBtn"); b.textContent = "✓ Saved"; clearTimeout(saveNow.t); saveNow.t = setTimeout(() => b.textContent = "✓ Save", 1600);
   toast(n && wc(n.body) ? `Saved "${noteTitle(n)}". Find it any time in Notes.` : "Saved.");
   if (document.activeElement && document.activeElement.blur && isTouch()) document.activeElement.blur();
@@ -1511,7 +1515,7 @@ async function rpMake() {
   if (rp.cancel) return;
   const type = (rec.mimeType || mime).split(";")[0] || "video/mp4", blob = new Blob(chunks, { type });
   if (!blob.size) { toast("The video came out empty. Try again, or use screen recording."); return; }
-  rp.blob = blob; rp.ext = type.includes("mp4") ? "mp4" : "webm";
+  rp.blob = blob; rp.ext = type.includes("mp4") ? "mp4" : "webm"; track("replay_video_" + rp.opts.mode);
   if (rp.url) URL.revokeObjectURL(rp.url); rp.url = URL.createObjectURL(blob);
   const v = $("#rpVideo"); v.src = rp.url; $("#rpOut").hidden = false;
   $("#rpFoot").textContent = rp.ext === "mp4" ? "Ready. Share it to Instagram, Threads, YouTube or WhatsApp, or save it to your Photos." : "Saved as a WebM video. If an app won't take it, make the video in Safari or Chrome on your phone.";
@@ -1528,7 +1532,7 @@ $("#rpDl").addEventListener("click", rpDownload);
 $("#rpShare").addEventListener("click", async () => {
   if (!rp.blob) return;
   const f = new File([rp.blob], `inkstreak-replay-${dayKey()}.${rp.ext}`, { type: rp.blob.type });
-  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "Written in Inkstreak · inkstreak.app" }); return; } }
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "Written in Inkstreak · inkstreak.app" }); track("replay_shared"); return; } }
   catch (e) { if (e && e.name === "AbortError") return; }
   rpDownload();
 });
@@ -1588,7 +1592,7 @@ async function openReceipt() {
   const n = activeNote();
   if (n && n.tag === "Handwritten" && !(n.proof && n.proof.typed >= 20)) { toast("This page was handwritten, so it has no typing receipt. Your paper is the proof."); return; }
   if (!n || !n.proof || n.proof.typed < 20) { toast("Type at least 20 words in this note first. Your receipt counts what you type from now on."); return; }
-  $("#receiptModal").hidden = false;
+  $("#receiptModal").hidden = false; track("receipt");
   rcCanvas = await makeReceipt(n); $("#receiptImg").src = rcCanvas.toDataURL("image/png");
 }
 $("#receiptBtn").addEventListener("click", openReceipt);
@@ -1647,7 +1651,7 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-clos
 // ---- Keep notes safe: install + backup nudges ----
 let installEvt = null;
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; renderNudges(); });
-window.addEventListener("appinstalled", () => { installEvt = null; S.dismiss.install = Date.now() + 3650 * 864e5; save(); renderNudges(); toast("Installed. Open Inkstreak from your Home Screen."); });
+window.addEventListener("appinstalled", () => { track("installed"); installEvt = null; S.dismiss.install = Date.now() + 3650 * 864e5; save(); renderNudges(); toast("Installed. Open Inkstreak from your Home Screen."); });
 const standalone = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } };
 const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isTouch = () => { try { return matchMedia("(pointer: coarse)").matches; } catch (e) { return false; } };
