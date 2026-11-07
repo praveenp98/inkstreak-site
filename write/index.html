@@ -562,8 +562,12 @@ const weekKey = d => dayKey(addDays(d, -((d.getDay()+6) % 7)));
 const wc = s => (String(s || "").match(/\S+/g) || []).length;
 const fmt = n => Math.round(n).toLocaleString();
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
-const track = (g, once) => { try { if (once) { if (track.done[g]) return; track.done[g] = 1; } window.umami && window.umami.track(g); } catch (e) {} };
+// Analytics: action names + coarse buckets only. Never note text.
+const bucket = n => n <= 0 ? "0" : n <= 50 ? "1-50" : n <= 250 ? "51-250" : n <= 1000 ? "251-1k" : n <= 5000 ? "1k-5k" : "5k+";
+const track = (g, data) => { try { if (window.umami) data ? window.umami.track(g, data) : window.umami.track(g); else (track.q = track.q || []).push([g, data]); } catch (e) {} };
+const trackOnce = (g, data) => { if (track.done[g]) return; track.done[g] = 1; track(g, data); };
 track.done = {};
+setTimeout(function flush() { if (window.umami && track.q) { const q = track.q; track.q = null; q.forEach(([g, d]) => track(g, d)); } else if (track.q) setTimeout(flush, 1500); }, 1500);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 const WELCOME = "This is your page. Every word you type here counts toward today's words and your streak.\n\nWrote somewhere else today, in another app or on paper? Use Log words on the Progress tab to add it.\n\nYour notes stay in this browser. Nothing is sent anywhere. Download a backup from Progress now and then.\n\nDelete this note whenever you like and start your own.";
@@ -616,7 +620,7 @@ async function askPersist() {
   try { if (navigator.storage && navigator.storage.persist) { S.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist()); save(); } } catch (e) {}
 }
 function addTyped(n) {
-  askPersist(); track("write_words", true);
+  askPersist(); trackOnce("write_words");
   const d = day(dayKey()); d.typed = (+d.typed || 0) + n; d.updatedAt = Date.now();
   if (sprint) sprint.words += n;
   save(); renderCounts();
@@ -668,6 +672,7 @@ function route() {
   document.querySelectorAll("nav[aria-label=Sections] a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "progress") renderProgress();
   if (v === "notes") renderAllNotes();
+  if (v !== "write") track("tab_" + v);
 }
 function renderCounts() {
   const t = total(dayKey()), g = +S.settings.goal || 1667, st = streakInfo();
@@ -685,6 +690,18 @@ function renderCounts() {
   renderNudges();
   const n = activeNote(); if (n) $("#noteWc").textContent = fmt(wc(n.body));
   renderSprint();
+  dailyTrack(t, g, st);
+}
+function dailyTrack(t, g, st) {
+  const k = dayKey(), f = S.flags || (S.flags = {});
+  if (f.visit !== k) {
+    f.visit = k; const dn = Math.floor((Date.now() - (S.firstUse || Date.now())) / 864e5) + 1;
+    track("active_day", { day: dn > 30 ? "30+" : String(dn), streak: String(Math.min(st.count, 30)), installed: standalone() ? "yes" : "no" }); save();
+  }
+  if (t >= g && f.goal !== k) { f.goal = k; track("goal_reached", { goal: String(g), streak: String(Math.min(st.count, 30)) }); save(); }
+  for (const m of [3, 7, 14, 30]) if (st.count >= m && !f["s" + m]) { f["s" + m] = 1; track("streak_" + m); save(); }
+  const all = Object.keys(S.days).reduce((a, d) => a + total(d), 0);
+  for (const m of [10000, 25000, 50000]) if (all >= m && !f["u" + m]) { f["u" + m] = 1; track("unlock_" + (m / 1000) + "k"); save(); }
 }
 let lastSavedAt = 0;
 function renderSaved() {
@@ -712,6 +729,7 @@ function openNote(id) {
   renderNotes(); renderCounts(); save();
 }
 function newNote() {
+  track("new_note");
   const now = Date.now(), n = { id: uuid(), title: "", body: "", tag: "", createdAt: now, updatedAt: now, deleted: false };
   S.notes.push(n); openNote(n.id); $("#body").focus();
 }
@@ -735,7 +753,7 @@ function renderSprint() {
 }
 function tick() {
   if (!sprint) return;
-  if (Date.now() >= sprint.end) { toast(`Time's up! ${fmt(sprint.words)} words in ${sprint.min} minutes. Keep going if you like.`); try { navigator.vibrate && navigator.vibrate(200); } catch (e) {} sprint = null; renderSprint(); return; }
+  if (Date.now() >= sprint.end) { track("sprint_done", { min: String(sprint.min), words: bucket(sprint.words) }); toast(`Time's up! ${fmt(sprint.words)} words in ${sprint.min} minutes. Keep going if you like.`); try { navigator.vibrate && navigator.vibrate(200); } catch (e) {} sprint = null; renderSprint(); return; }
   renderSprint(); setTimeout(tick, 500);
 }
 
@@ -886,7 +904,7 @@ async function makeCard() {
 }
 let cardCanvas = null;
 async function openShare() {
-  track("share_card");
+  track("share_card", { size: cardSize });
   $("#shareModal").hidden = false;
   document.querySelectorAll("#shareModal [data-size]").forEach(b => b.classList.toggle("primary", b.dataset.size === cardSize));
   cardCanvas = await makeCard();
@@ -975,7 +993,7 @@ $("#sprintBox").addEventListener("click", e => {
   if (b.dataset.sprint === "cancel") { sprintPick = false; renderSprint(); return; }
   sprintPick = false;
   if (b.dataset.sprint === "stop") { toast(`Sprint stopped at ${fmt(sprint.words)} words.`); sprint = null; renderSprint(); return; }
-  sprint = { end: Date.now() + +b.dataset.sprint * 60000, min: +b.dataset.sprint, words: 0 }; tick(); $("#body").focus();
+  sprint = { end: Date.now() + +b.dataset.sprint * 60000, min: +b.dataset.sprint, words: 0 }; track("sprint_start", { min: String(sprint.min) }); tick(); $("#body").focus();
 });
 $("#focusBtn").addEventListener("click", () => {
   const on = document.body.classList.toggle("focus");
@@ -1003,7 +1021,7 @@ $("#logs").addEventListener("click", e => {
   const l = S.logs[i], d = day(l.day); d.logged = Math.max(0, (+d.logged || 0) - l.words);
   S.logs.splice(i, 1); save(); renderProgress(); renderCounts();
 });
-const setCh = c => { S.settings.challenge = c; save(); renderProgress(); renderCounts(); $("#setMsg").textContent = c ? "Challenge set." : "Challenge off."; };
+const setCh = c => { track("challenge_set", { name: c ? c.name : "none" }); S.settings.challenge = c; save(); renderProgress(); renderCounts(); $("#setMsg").textContent = c ? "Challenge set." : "Challenge off."; };
 $("#preNov").addEventListener("click", () => setCh({ name: "November novel", target: 50000, start: `${new Date().getFullYear()}-11-01`, days: 30 }));
 $("#pre30").addEventListener("click", () => setCh({ name: "30-day challenge", target: 50000, start: dayKey(), days: 30 }));
 $("#preOff").addEventListener("click", () => setCh(null));
@@ -1018,7 +1036,7 @@ $("#setForm").addEventListener("submit", e => {
   save(); renderProgress(); renderCounts(); $("#setMsg").textContent = "Saved.";
   setTimeout(() => $("#setMsg").textContent = "", 2500);
 });
-$("#expJson").addEventListener("click", () => { S.lastBackup = Date.now(); save(); renderNudges(); renderProtect(); download(`inkstreak-backup-${dayKey()}.json`, JSON.stringify(exportObj(), null, 2), "application/json"); });
+$("#expJson").addEventListener("click", () => { track("backup_downloaded"); S.lastBackup = Date.now(); save(); renderNudges(); renderProtect(); download(`inkstreak-backup-${dayKey()}.json`, JSON.stringify(exportObj(), null, 2), "application/json"); });
 $("#copyJson").addEventListener("click", () => { S.lastBackup = Date.now(); save(); renderNudges(); renderProtect(); copy(JSON.stringify(exportObj()), "Backup copied. Paste it into a note or email to yourself."); });
 $("#expTxt").addEventListener("click", () => {
   const txt = liveNotes().map(n => `${noteTitle(n)}\n${new Date(n.updatedAt).toLocaleString()}${n.tag ? " · " + n.tag : ""}\n\n${n.body}`).join("\n\n----------\n\n");
@@ -1030,7 +1048,7 @@ $("#impFile").addEventListener("change", e => {
   r.onload = () => {
     const m = $("#dataMsg");
     try { const res = merge(JSON.parse(r.result)); save(); ensureNote(); renderNotes(); renderProgress(); renderCounts();
-      m.className = "msg ok"; m.textContent = `Loaded. ${res.notes} notes added or updated, ${res.dayCount} days of word counts merged.`; }
+      track("backup_loaded"); m.className = "msg ok"; m.textContent = `Loaded. ${res.notes} notes added or updated, ${res.dayCount} days of word counts merged.`; }
     catch (err) { m.className = "msg err"; m.textContent = "That file isn't an Inkstreak backup. Choose the .json file you downloaded from Inkstreak."; }
     e.target.value = "";
   };
@@ -1175,7 +1193,7 @@ $("#paperSave").addEventListener("click", async () => {
   const now = Date.now(), d = new Date();
   const note = { id: uuid(), title: `Paper page · ${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`, body: text, tag: "Handwritten", createdAt: now, updatedAt: now, deleted: false, photo: false };
   if (paperBlob) { try { await photoDB.put(note.id, paperBlob); note.photo = true; } catch (e) { toast("Couldn't keep the photo on this device. The text is saved."); } }
-  S.notes.push(note); track("paper_page");
+  S.notes.push(note); track("paper_page", { words: bucket(n), photo: paperBlob ? "yes" : "no" });
   const dd = day(dayKey()); dd.paper = (+dd.paper || 0) + n; dd.updatedAt = now;
   $("#paperModal").hidden = true; openNote(note.id); save();
   toast(n ? `Saved. ${fmt(n)} handwritten words added to today.` : "Photo saved. Add the text later to count the words.");
@@ -1189,7 +1207,7 @@ function saveNow() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
   saveRecs(); renderSaved(); renderNotes(); askPersist();
   if (!storageOK) { toast("This browser blocked saving. Copy your text somewhere safe."); return; }
-  track("note_saved");
+  track("note_saved", { words: bucket(n ? wc(n.body) : 0) });
   const b = $("#saveBtn"); b.textContent = "✓ Saved"; clearTimeout(saveNow.t); saveNow.t = setTimeout(() => b.textContent = "✓ Save", 1600);
   toast(n && wc(n.body) ? `Saved "${noteTitle(n)}". Find it any time in Notes.` : "Saved.");
   if (document.activeElement && document.activeElement.blur && isTouch()) document.activeElement.blur();
@@ -1482,7 +1500,7 @@ async function openReplay() {
   if (!FONTS[rp.opts.font]) rp.opts.font = LOOKS[rp.opts.look].font;
   if (!SPEEDS.map(String).includes(String(rp.opts.speed))) rp.opts.speed = "auto";
   $("#rpOut").hidden = true; $("#rpFoot").textContent = "The video is made on your phone. Nothing is uploaded. Keep this screen open while it records.";
-  $("#replayModal").hidden = false; rpControls(); rpPreview();
+  $("#replayModal").hidden = false; rpControls(); rpPreview(); track("replay_opened", { real: rp.canReal ? "yes" : "no", words: bucket(wc(n.body)) });
 }
 function closeReplay() {
   if ($("#replayModal").hidden) return;
@@ -1515,24 +1533,24 @@ async function rpMake() {
   if (rp.cancel) return;
   const type = (rec.mimeType || mime).split(";")[0] || "video/mp4", blob = new Blob(chunks, { type });
   if (!blob.size) { toast("The video came out empty. Try again, or use screen recording."); return; }
-  rp.blob = blob; rp.ext = type.includes("mp4") ? "mp4" : "webm"; track("replay_video_" + rp.opts.mode);
+  rp.blob = blob; rp.ext = type.includes("mp4") ? "mp4" : "webm"; track("replay_video", { mode: rp.opts.mode, look: rp.opts.look, font: rp.opts.font, size: rp.opts.size, speed: String(rp.opts.speed), format: rp.ext });
   if (rp.url) URL.revokeObjectURL(rp.url); rp.url = URL.createObjectURL(blob);
   const v = $("#rpVideo"); v.src = rp.url; $("#rpOut").hidden = false;
   $("#rpFoot").textContent = rp.ext === "mp4" ? "Ready. Share it to Instagram, Threads, YouTube or WhatsApp, or save it to your Photos." : "Saved as a WebM video. If an app won't take it, make the video in Safari or Chrome on your phone.";
   setTimeout(() => $("#rpOut").scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
   rpPreview();
 }
-function rpDownload() { if (!rp.url) return; try { const a = document.createElement("a"); a.href = rp.url; a.download = `inkstreak-replay-${dayKey()}.${rp.ext}`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the video to save it."); } }
+function rpDownload() { if (!rp.url) return; track("replay_downloaded", { mode: rp.opts.mode, look: rp.opts.look }); try { const a = document.createElement("a"); a.href = rp.url; a.download = `inkstreak-replay-${dayKey()}.${rp.ext}`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the video to save it."); } }
 $("#replayBtn").addEventListener("click", openReplay);
 $("#rpClose").addEventListener("click", closeReplay);
 $("#replayModal").addEventListener("click", e => { if (e.target.id === "replayModal" && !rp.recorder) closeReplay(); });
-$("#rpPlay").addEventListener("click", () => { if (rp.anim) { rpPreview(); return; } $("#rpPlay").textContent = "■ Stop"; rpRun(null, () => { $("#rpPlay").textContent = "▶ Play preview"; }); });
+$("#rpPlay").addEventListener("click", () => { if (rp.anim) { rpPreview(); return; } trackOnce("replay_preview"); $("#rpPlay").textContent = "■ Stop"; rpRun(null, () => { $("#rpPlay").textContent = "▶ Play preview"; }); });
 $("#rpMake").addEventListener("click", rpMake);
 $("#rpDl").addEventListener("click", rpDownload);
 $("#rpShare").addEventListener("click", async () => {
   if (!rp.blob) return;
   const f = new File([rp.blob], `inkstreak-replay-${dayKey()}.${rp.ext}`, { type: rp.blob.type });
-  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "Written in Inkstreak · inkstreak.app" }); track("replay_shared"); return; } }
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "Written in Inkstreak · inkstreak.app" }); track("replay_shared", { mode: rp.opts.mode, look: rp.opts.look }); return; } }
   catch (e) { if (e && e.name === "AbortError") return; }
   rpDownload();
 });
@@ -1592,15 +1610,15 @@ async function openReceipt() {
   const n = activeNote();
   if (n && n.tag === "Handwritten" && !(n.proof && n.proof.typed >= 20)) { toast("This page was handwritten, so it has no typing receipt. Your paper is the proof."); return; }
   if (!n || !n.proof || n.proof.typed < 20) { toast("Type at least 20 words in this note first. Your receipt counts what you type from now on."); return; }
-  $("#receiptModal").hidden = false; track("receipt");
+  $("#receiptModal").hidden = false; track("receipt", { typed: bucket(n.proof.typed) });
   rcCanvas = await makeReceipt(n); $("#receiptImg").src = rcCanvas.toDataURL("image/png");
 }
 $("#receiptBtn").addEventListener("click", openReceipt);
 $("#rcTitle").addEventListener("change", openReceipt);
-$("#rcDl").addEventListener("click", () => { if (!rcCanvas) return; try { const a = document.createElement("a"); a.href = rcCanvas.toDataURL("image/png"); a.download = `human-receipt-${dayKey()}.png`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the image to save it."); } });
+$("#rcDl").addEventListener("click", () => { if (!rcCanvas) return; track("receipt_downloaded"); try { const a = document.createElement("a"); a.href = rcCanvas.toDataURL("image/png"); a.download = `human-receipt-${dayKey()}.png`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the image to save it."); } });
 $("#rcShare").addEventListener("click", () => rcCanvas && rcCanvas.toBlob(async b => {
   const f = new File([b], "human-receipt.png", { type: "image/png" }), text = "Written by a human. Proof: inkstreak.app/write";
-  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text }); return; } } catch (e) { return; }
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text }); track("receipt_shared"); return; } } catch (e) { return; }
   copy(text, "Caption copied. Save the image and post it with the caption.");
 }));
 
@@ -1673,7 +1691,7 @@ function renderNudges() {
 $("#nudges").addEventListener("click", async e => {
   const b = e.target.closest("[data-nudge]"); if (!b) return;
   const a = b.dataset.nudge;
-  if (a === "install" && installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (err) {} installEvt = null; }
+  if (a === "install" && installEvt) { track("install_prompt"); installEvt.prompt(); try { await installEvt.userChoice; } catch (err) {} installEvt = null; }
   if (a === "later-install") S.dismiss.install = Date.now() + 3 * 864e5;
   if (a === "later-backup") S.dismiss.backup = Date.now() + 2 * 864e5;
   if (a === "backup") $("#expJson").click();

@@ -188,7 +188,7 @@ const $ = s => document.querySelector(s);
 const fmt = n => Math.round(n).toLocaleString();
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const wc = s => (String(s || "").match(/\S+/g) || []).length;
-const track = g => { try { window.umami && window.umami.track(g); } catch (e) {} };
+const track = (g, d) => { try { if (window.umami) d ? window.umami.track(g, d) : window.umami.track(g); } catch (e) {} };
 function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3600); }
 
 const BASE = "Below are my own notes and journal entries, oldest first. Work only from what I actually wrote. Quote my exact words (with dates where they exist) to back up every point. Don't rewrite, polish or add to my writing, and don't give me generic advice. If something isn't in my notes, say so.";
@@ -282,11 +282,11 @@ async function copy(text, msg) {
 }
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-copy]"), b = e.target.closest("[data-copyall]");
-  if (a) { const { it, text } = promptFor(a.dataset.copy); copy(text + "\n\nMY NOTES:\n[paste your notes here]", "Prompt copied. Paste it into your AI app, then add your notes."); track("guide_copy"); }
+  if (a) { const { it, text } = promptFor(a.dataset.copy); copy(text + "\n\nMY NOTES:\n[paste your notes here]", "Prompt copied. Paste it into your AI app, then add your notes."); track("guide_copy", { prompt: it.t.slice(0, 40), level: String(it.lvl) }); }
   if (b) {
     const { text } = promptFor(b.dataset.copyall), n = notesText();
     copy(`${text}\n\nMY NOTES (${fmt(n.words)} words):\n\n${n.text}`, n.cut ? `Copied with your newest ${fmt(n.words)} words. Many AI apps can't take more in one paste.` : `Copied with all ${fmt(n.words)} words of your notes. Paste it into your AI app.`);
-    track("guide_copy_notes");
+    track("guide_copy_notes", { prompt: promptFor(b.dataset.copyall).it.t.slice(0, 40) });
   }
   const f = e.target.closest("[data-lvl]");
   if (f) { document.querySelectorAll("[data-lvl]").forEach(x => x.setAttribute("aria-pressed", String(x === f))); renderGroups(f.dataset.lvl); }

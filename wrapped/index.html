@@ -213,7 +213,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const pad = n => String(n).padStart(2, "0");
 const KEY = "inkstreak.wrapped.v1", NOTES_KEY = "inkstreak.web.v1";
-const track = g => { try { window.umami && window.umami.track(g); } catch (e) {} };
+const bucket = n => n <= 0 ? "0" : n <= 1000 ? "1-1k" : n <= 10000 ? "1k-10k" : n <= 80000 ? "10k-80k" : n <= 300000 ? "80k-300k" : "300k+";
+const track = (g, d) => { try { if (window.umami) d ? window.umami.track(g, d) : window.umami.track(g); } catch (e) {} };
 function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3400); }
 function show(id) { ["start","howto","who","added","show"].forEach(x => $("#" + x).hidden = x !== id); window.scrollTo(0, 0); }
 function err(t) { const e = $("#err"); e.textContent = t || ""; e.hidden = !t; }
@@ -279,6 +280,7 @@ function renderColl() {
 }
 function home() { S.sources = S.sources.filter(x => !x.sample); err(""); renderTiles(); renderColl(); if (!S.sources.length) $("#hero").hidden = false; show("start"); }
 function openPlace(id) {
+  track("wrapped_place", { place: id });
   current = PLACES.find(p => p.id === id); err(""); $("#busy").hidden = true;
   $("#howtoBody").innerHTML = `<h2>${current.name}</h2><ol>${current.how.map(h => `<li>${h}</li>`).join("")}</ol>` +
     (current.paste ? `<textarea id="pasteText" placeholder="Paste a note or journal here…" aria-label="Your text"></textarea><button class="btn go" type="button" id="pasteGo">Count these words</button><button class="btn" type="button" id="pickFile">Or choose text files</button>`
@@ -565,7 +567,7 @@ function finishBatch(b, sample) {
   S.sources = S.sources.filter(s => s.id !== A.id && (!s.sample || sample));
   S.sources.push(A); if (!sample) save();
   lastItems = b.items; lastLabel = b.label;
-  track(sample ? "wrapped_sample" : "wrapped_add_" + b.kind);
+  track(sample ? "wrapped_sample" : "wrapped_add", sample ? undefined : { source: b.kind, words: bucket(A.words) });
   if (queue.length) return nextBatch();
   const tot = S.sources.reduce((a, s) => a + s.words, 0), n = S.sources.length;
   $("#addedBox").innerHTML = `<p style="font-weight:900">+ ${fmt(A.words)} words from ${esc(A.label)}${sample ? " (example)" : ""}</p><p class="big num">${fmt(tot)}</p><p style="font-weight:800">words in your collection so far${n > 1 ? `, from ${n} sources` : ""}.</p>`;
@@ -596,12 +598,12 @@ function startSlides() {
   if (C.longest > 30) slides.push(`<div class="slide s-ink"><span class="k">Your longest single piece</span><p class="big num">${fmt(C.longest)}</p><p class="mid">words, in one go.</p><p class="say">In ${esc(C.longestFrom)}${C.longestAt ? ", on " + longDay(dayKey(new Date(C.longestAt))) : ""}.${C.bestRun > 2 ? ` Longest run of writing days in a row: ${C.bestRun}.` : ""}</p><div class="foot">${foot}</div></div>`);
   slides.push(`<div class="slide s-green"><span class="k">What kind of writer you are</span><p class="say">You're a</p><p class="mid" style="font-size:clamp(34px,10vw,52px)">${C.type.name}</p><p class="say">${C.type.line}</p><p class="say" style="font-weight:700">Style: ${C.type.style}.</p>${C.type.guessed ? `<p class="say" style="font-size:16px">Add WhatsApp or X to find out when you write best.</p>` : ""}<div class="foot">${foot}</div></div>`);
   slides.push("FINAL");
-  idx = 0; show("show"); render(); track("wrapped_view");
+  idx = 0; show("show"); render(); track("wrapped_view", { sources: String(Object.keys(C.bySrc).length), words: bucket(C.words), sample: C.sample ? "yes" : "no" });
 }
 function render() {
   $("#bars").innerHTML = slides.map((_, i) => `<i class="${i <= idx ? "on" : ""}"></i>`).join("");
   $("#prev").style.visibility = idx ? "visible" : "hidden";
-  if (slides[idx] === "FINAL") { $("#nav").hidden = true; renderFinal(); return; }
+  if (slides[idx] === "FINAL") { $("#nav").hidden = true; renderFinal(); track("wrapped_finished", { words: bucket(C.words) }); return; }
   $("#nav").hidden = false; $("#next").textContent = idx === slides.length - 2 ? "See my card" : "Next";
   $("#slide").innerHTML = slides[idx];
 }
