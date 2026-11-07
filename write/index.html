@@ -120,6 +120,9 @@ textarea#body{flex:1;resize:none;border:none;background:transparent;font:400 19p
 .ed-foot .grow{flex:1}
 .sprint{display:flex;gap:6px;align-items:center}
 .sprint-live{font-weight:900;color:var(--orange)}
+#sprintBox[data-mode="pick"]{flex-basis:100%;display:grid;gap:8px;background:var(--green-t);border-radius:12px;padding:10px 12px}
+.sprint-pick{font-size:14px;line-height:1.45}
+.sprint-opts{display:flex;gap:6px;flex-wrap:wrap}
 .confirm{color:var(--red)!important}
 
 /* Focus mode */
@@ -297,12 +300,9 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <div class="bar" role="progressbar" aria-label="Today's goal" aria-valuemin="0" aria-valuemax="100" id="tBarWrap"><i id="tBar" style="width:0%"></i></div>
         <p class="soft" id="tNote" style="margin-top:6px;font-size:13.5px"></p>
       </div>
-      <form class="logbox" id="logForm" autocomplete="off">
-        <label for="logN" class="soft" style="font-size:13px;font-weight:800">Wrote somewhere else?</label>
-        <input id="logN" type="number" inputmode="numeric" min="1" max="100000" placeholder="Words">
-        <button class="btn primary" type="submit">Log words</button>
+      <div class="logbox">
         <button class="btn" type="button" id="paperBtn">✍️ Add a paper page</button>
-      </form>
+      </div>
     </div>
 
     <div class="write">
@@ -376,8 +376,12 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 
     <div class="grid2">
       <div class="card">
-        <h2>Logged words</h2>
-        <p class="soft" style="font-size:14px">Words you wrote in other apps or on paper.</p>
+        <h2>Log words</h2>
+        <p class="soft" style="font-size:14px">Wrote somewhere else today, like a work doc or a paper diary you won't scan? Add a rough word count so it counts toward your goal and streak.</p>
+        <form class="logbox" id="logForm" autocomplete="off" style="margin-top:10px">
+          <input id="logN" type="number" inputmode="numeric" min="1" max="100000" placeholder="Words" aria-label="Words written elsewhere">
+          <button class="btn primary" type="submit">Log words</button>
+        </form>
         <div class="logs" id="logs"></div>
       </div>
       <div class="card">
@@ -517,7 +521,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
         <li>Come back and tap <b>📋 Paste text</b>.</li>
       </ol>
       <p class="soft" style="font-size:13px;margin-top:6px">Choose the photo here too if you'd like to keep it with the note.</p></details>
-    <p class="soft" style="font-size:12.5px">The photo stays on this device only and isn't in backups. Prefer not to scan? Close this and use <b>Log words</b> with a rough count.</p>
+    <p class="soft" style="font-size:12.5px">The photo stays on this device only and isn't in backups. Prefer not to scan? Close this and use <b>Log words</b> on the Progress tab with a rough count.</p>
     <button class="btn primary" type="button" id="paperSave">Save page and count the words</button>
   </div>
 </div>
@@ -560,7 +564,7 @@ const fmt = n => Math.round(n).toLocaleString();
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-const WELCOME = "This is your page. Every word you type here counts toward today's words and your streak.\n\nWrote somewhere else today, in another app or on paper? Use Log words at the top to add it.\n\nYour notes stay in this browser. Nothing is sent anywhere. Download a backup from Progress now and then.\n\nDelete this note whenever you like and start your own.";
+const WELCOME = "This is your page. Every word you type here counts toward today's words and your streak.\n\nWrote somewhere else today, in another app or on paper? Use Log words on the Progress tab to add it.\n\nYour notes stay in this browser. Nothing is sent anywhere. Download a backup from Progress now and then.\n\nDelete this note whenever you like and start your own.";
 
 function fresh() {
   const now = Date.now(), t = new Date();
@@ -711,21 +715,25 @@ function newNote() {
 }
 function ensureNote() { if (!activeNote()) { const l = liveNotes(); l.length ? openNote(l[0].id) : newNote(); } }
 
+let sprintPick = false;
 function renderSprint() {
   const box = $("#sprintBox");
   if (sprint) {
     const ms = Math.max(0, sprint.end - Date.now()), m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60;
-    const html = `<span class="sprint-live num">${m}:${pad(s)} · ${fmt(sprint.words)} words</span><button class="btn small ghost" type="button" data-sprint="stop">Stop</button>`;
+    const html = `<span class="sprint-live num">⏱ ${m}:${pad(s)} left · ${fmt(sprint.words)} words</span><button class="btn small ghost" type="button" data-sprint="stop">Stop</button>`;
     if (box.dataset.mode !== "live") { box.dataset.mode = "live"; box.innerHTML = html; }
-    else box.querySelector(".sprint-live").textContent = `${m}:${pad(s)} · ${fmt(sprint.words)} words`;
+    else box.querySelector(".sprint-live").textContent = `⏱ ${m}:${pad(s)} left · ${fmt(sprint.words)} words`;
+  } else if (sprintPick) {
+    if (box.dataset.mode !== "pick") { box.dataset.mode = "pick";
+      box.innerHTML = `<span class="sprint-pick"><b>Timed sprint:</b> write without stopping until the timer ends. Don't fix, don't reread. We count your words and tell you when time's up.</span><span class="sprint-opts"><button class="btn small primary" type="button" data-sprint="5">5 min</button><button class="btn small" type="button" data-sprint="10">10 min</button><button class="btn small" type="button" data-sprint="15">15 min</button><button class="btn small" type="button" data-sprint="25">25 min</button><button class="btn small ghost" type="button" data-sprint="cancel">Cancel</button></span>`; }
   } else if (box.dataset.mode !== "idle") {
     box.dataset.mode = "idle";
-    box.innerHTML = `<span class="soft">Sprint</span><button class="btn small" type="button" data-sprint="5">5 min</button><button class="btn small" type="button" data-sprint="15">15</button><button class="btn small" type="button" data-sprint="25">25</button>`;
+    box.innerHTML = `<button class="btn small" type="button" data-sprint="pick">⏱ Timed sprint</button>`;
   }
 }
 function tick() {
   if (!sprint) return;
-  if (Date.now() >= sprint.end) { toast(`Sprint done: ${fmt(sprint.words)} words in ${sprint.min} minutes.`); sprint = null; renderSprint(); return; }
+  if (Date.now() >= sprint.end) { toast(`Time's up! ${fmt(sprint.words)} words in ${sprint.min} minutes. Keep going if you like.`); try { navigator.vibrate && navigator.vibrate(200); } catch (e) {} sprint = null; renderSprint(); return; }
   renderSprint(); setTimeout(tick, 500);
 }
 
@@ -770,7 +778,7 @@ function renderProgress() {
   // Logs
   const logs = [...S.logs].sort((a, b) => b.createdAt - a.createdAt).slice(0, 60);
   $("#logs").innerHTML = logs.length ? logs.map(l => `<div class="li"><b class="num">+${fmt(l.words)}</b><span class="grow soft">${parseDay(l.day).toLocaleDateString(undefined, { day: "numeric", month: "short" })}${l.note ? " · " + esc(l.note) : ""}</span><button class="btn small ghost danger" type="button" data-dellog="${l.id}">Remove</button></div>`).join("")
-    : `<p class="soft" style="font-size:14px">Nothing logged yet. Use <b>Log words</b> on the Write page.</p>`;
+    : `<p class="soft" style="font-size:14px">Nothing logged yet.</p>`;
 
   // Settings fields
   const s = S.settings;
@@ -940,7 +948,7 @@ $("#body").addEventListener("input", e => {
   if (it === "insertFromPaste" || it === "insertFromDrop") { pf.pastes++; if (delta > 0) pf.pasted += delta; }
   else if (delta > 0) pf.typed += delta;
   if (delta > 0) {
-    if (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop") { if (delta > 3) toast("Pasted words aren't counted. Use Log words for writing done elsewhere."); }
+    if (e.inputType === "insertFromPaste" || e.inputType === "insertFromDrop") { if (delta > 3) toast("Pasted words aren't counted toward today. Use Log words on the Progress tab for writing done elsewhere."); }
     else addTyped(delta);
   }
   $("#noteWc").textContent = fmt(now); save(); clearTimeout(renderNotes.t); renderNotes.t = setTimeout(renderNotes, 300);
@@ -960,6 +968,9 @@ $("#delNote").addEventListener("click", e => {
 });
 $("#sprintBox").addEventListener("click", e => {
   const b = e.target.closest("[data-sprint]"); if (!b) return;
+  if (b.dataset.sprint === "pick") { sprintPick = true; renderSprint(); return; }
+  if (b.dataset.sprint === "cancel") { sprintPick = false; renderSprint(); return; }
+  sprintPick = false;
   if (b.dataset.sprint === "stop") { toast(`Sprint stopped at ${fmt(sprint.words)} words.`); sprint = null; renderSprint(); return; }
   sprint = { end: Date.now() + +b.dataset.sprint * 60000, min: +b.dataset.sprint, words: 0 }; tick(); $("#body").focus();
 });
