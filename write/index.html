@@ -21,7 +21,7 @@
 <title>Inkstreak Web</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@600;700;800;900&display=swap">
 <style>
 /* Layout: sticky stat bar on top; three views (Write, Progress, Get the app) switched by hash. Write = editor + notes rail. */
 :root{
@@ -222,6 +222,17 @@ body.focus main{padding-block:8px}
 .ncard .snip{font:400 14.5px/1.5 var(--serif);color:var(--soft);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .ncard img{width:100%;max-width:100%;height:130px;object-fit:cover;border-radius:10px;border:2px solid var(--line)}
 .nempty{grid-column:1/-1;text-align:center;padding:30px 10px;color:var(--soft)}
+.sheet.wide{max-width:560px}
+.rp-stage{display:flex;justify-content:center;background:var(--bg);border-radius:14px;padding:10px}
+#rpCanvas{display:block;width:auto;height:auto;max-width:100%;max-height:50vh;border-radius:10px;box-shadow:0 6px 22px rgba(0,0,0,.18)}
+.rp-label{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--soft);margin-bottom:6px}
+.rp-seg{display:flex;gap:6px;flex-wrap:wrap}
+.rp-seg .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);box-shadow:none}
+.rp-looks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rp-look{border:2px solid var(--line);border-radius:12px;padding:6px;cursor:pointer;background:var(--card);font:800 12.5px var(--ui);color:var(--ink);display:grid;gap:5px;text-align:center}
+.rp-look i{font-style:normal;height:44px;border-radius:8px}
+.rp-look[aria-pressed="true"]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
+#rpVideo{width:100%;max-height:50vh;border-radius:12px;background:#000}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -315,6 +326,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
           <span class="num"><b id="noteWc">0</b> words in this note</span>
           <span class="grow soft" id="saved">Saved in this browser</span>
           <div class="sprint" id="sprintBox"></div>
+          <button class="btn small" id="replayBtn" type="button">▶ Replay video</button>
           <button class="btn small" id="receiptBtn" type="button">🧾 Human receipt</button>
           <button class="btn small" id="focusBtn" type="button">Focus</button>
           <button class="btn small ghost danger" id="delNote" type="button">Delete</button>
@@ -452,6 +464,23 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <img id="shareImg" alt="Your writing card">
     <p class="soft" style="font-size:13px">Press and hold (or right-click) the image to save it if the buttons don't work in your browser.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="shareDl" type="button">Download</button><button class="btn" id="shareNative" type="button" hidden>Share</button></div>
+  </div>
+</div>
+<div class="modal" id="replayModal" hidden role="dialog" aria-modal="true" aria-labelledby="rpH">
+  <div class="sheet wide">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="rpH" style="flex:1">Writing replay video</h2><button class="btn small ghost" type="button" id="rpClose">Close</button></div>
+    <div class="rp-stage"><canvas id="rpCanvas" width="1080" height="1920" aria-label="Preview of your writing video"></canvas></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" type="button" id="rpPlay">▶ Play preview</button><span class="soft num" id="rpInfo" style="font-size:13.5px;flex:1;min-width:160px"></span></div>
+    <div><p class="rp-label">Style</p><div class="rp-seg" id="rpMode" role="group" aria-label="Style"><button class="btn small" type="button" data-mode="real">Real replay</button><button class="btn small" type="button" data-mode="type">Clean typewriter</button></div><p class="soft" id="rpModeNote" style="font-size:13px;margin-top:6px"></p></div>
+    <div><p class="rp-label">Look</p><div class="rp-looks" id="rpLooks" role="group" aria-label="Look"></div></div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <div><p class="rp-label">Size</p><div class="rp-seg" id="rpSize" role="group" aria-label="Size"><button class="btn small" type="button" data-rsize="story">Story 9:16</button><button class="btn small" type="button" data-rsize="post">Post 4:5</button></div></div>
+      <div><p class="rp-label">Length</p><div class="rp-seg" id="rpLen" role="group" aria-label="Length"><button class="btn small" type="button" data-len="15">15 s</button><button class="btn small" type="button" data-len="30">30 s</button><button class="btn small" type="button" data-len="60">60 s</button></div></div>
+    </div>
+    <label class="toggle" style="font-size:14px"><input id="rpTitle" type="checkbox" checked> Show the title</label>
+    <button class="btn primary" type="button" id="rpMake">🎬 Make video</button>
+    <div id="rpOut" class="stack" hidden><video id="rpVideo" controls playsinline muted></video><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" id="rpShare">Share or save</button><button class="btn" type="button" id="rpDl">Download</button></div></div>
+    <p class="soft" style="font-size:12.5px" id="rpFoot"></p>
   </div>
 </div>
 <div class="modal" id="paperModal" hidden role="dialog" aria-modal="true" aria-labelledby="paperH">
@@ -668,6 +697,7 @@ function openNote(id) {
   $("#title").value = n ? n.title : ""; $("#body").value = n ? n.body : ""; $("#tag").value = n ? n.tag || "" : "";
   lastWc = wc(n ? n.body : "");
   showPhoto(n);
+  if (n) loadRec(n);
   renderNotes(); renderCounts(); save();
 }
 function newNote() {
@@ -842,7 +872,7 @@ async function makeCard() {
 let cardCanvas = null;
 async function openShare() {
   $("#shareModal").hidden = false;
-  document.querySelectorAll("[data-size]").forEach(b => b.classList.toggle("primary", b.dataset.size === cardSize));
+  document.querySelectorAll("#shareModal [data-size]").forEach(b => b.classList.toggle("primary", b.dataset.size === cardSize));
   cardCanvas = await makeCard();
   $("#shareImg").src = cardCanvas.toDataURL("image/png");
   cardCanvas.toBlob(b => {
@@ -894,6 +924,7 @@ async function copy(text, okMsg) {
 // ---- Events ----
 $("#body").addEventListener("input", e => {
   const n = activeNote(); if (!n) return;
+  recordEdit(n, n.body || "", e.target.value, e.inputType || "");
   n.body = e.target.value; n.updatedAt = Date.now();
   const now = wc(n.body), delta = now - lastWc; lastWc = now;
   const pf = n.proof || (n.proof = { typed: 0, pastes: 0, pasted: 0, backspaces: 0, activeMs: 0, start: 0, last: 0 });
@@ -919,7 +950,7 @@ $("#delNote").addEventListener("click", e => {
   const btn = e.currentTarget;
   if (!delArm) { delArm = setTimeout(() => { delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm"); }, 3000); btn.textContent = "Tap again to delete"; btn.classList.add("confirm"); return; }
   clearTimeout(delArm); delArm = null; btn.textContent = "Delete"; btn.classList.remove("confirm");
-  const n = activeNote(); if (n) { if (n.photo) photoDB.del(n.id); n.deleted = true; n.photo = false; n.updatedAt = Date.now(); n.body = ""; n.title = ""; }
+  const n = activeNote(); if (n) { if (n.photo) photoDB.del(n.id); replayDB.del(n.id); delete REC[n.id]; n.deleted = true; n.photo = false; n.updatedAt = Date.now(); n.body = ""; n.title = ""; }
   S.activeId = null; ensureNote(); toast("Note deleted"); save();
 });
 $("#sprintBox").addEventListener("click", e => {
@@ -935,7 +966,7 @@ $("#focusBtn").addEventListener("click", () => {
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
-  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; }
+  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; closeReplay(); }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); toast("Saved in this browser"); }
 });
 $("#logForm").addEventListener("submit", e => {
@@ -991,7 +1022,7 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-copy
 $("#shareBtn").addEventListener("click", openShare);
 $("#shareClose").addEventListener("click", () => $("#shareModal").hidden = true);
 $("#shareModal").addEventListener("click", e => { if (e.target.id === "shareModal") e.target.hidden = true; });
-document.querySelectorAll("[data-size]").forEach(b => b.addEventListener("click", () => { cardSize = b.dataset.size; openShare(); }));
+document.querySelectorAll("#shareModal [data-size]").forEach(b => b.addEventListener("click", () => { cardSize = b.dataset.size; openShare(); }));
 $("#shareDl").addEventListener("click", () => {
   if (!cardCanvas) return;
   try { const a = document.createElement("a"); a.href = cardCanvas.toDataURL("image/png"); a.download = `inkstreak-${dayKey()}.png`; document.body.appendChild(a); a.click(); a.remove(); }
@@ -1032,14 +1063,18 @@ $("#nNew").addEventListener("click", () => { location.hash = "#write"; newNote()
 $("#nPaper").addEventListener("click", () => { location.hash = "#write"; openPaper(); });
 
 // ---- Paper pages ----
-const photoDB = {
-  db: null,
-  open() { if (!this.db) this.db = new Promise((res, rej) => { try { const r = indexedDB.open("inkstreak-photos", 1); r.onupgradeneeded = () => r.result.createObjectStore("p"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); return this.db; },
-  async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction("p", mode), st = tx.objectStore("p"), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); }); },
-  put(k, v) { return this.run("readwrite", s => s.put(v, k)); },
-  get(k) { return this.run("readonly", s => s.get(k)); },
-  del(k) { return this.run("readwrite", s => s.delete(k)).catch(() => {}); }
-};
+function makeStore(name, store) {
+  return {
+    db: null,
+    open() { if (!this.db) this.db = new Promise((res, rej) => { try { const r = indexedDB.open(name, 1); r.onupgradeneeded = () => r.result.createObjectStore(store); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); return this.db; },
+    async run(mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction(store, mode), st = tx.objectStore(store), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); }); },
+    put(k, v) { return this.run("readwrite", st => st.put(v, k)); },
+    get(k) { return this.run("readonly", st => st.get(k)); },
+    del(k) { return this.run("readwrite", st => st.delete(k)).catch(() => {}); }
+  };
+}
+const photoDB = makeStore("inkstreak-photos", "p");
+const replayDB = makeStore("inkstreak-replays", "r");
 let paperBlob = null, photoUrl = null;
 function openPaper() {
   $("#paperText").value = ""; $("#paperWc").textContent = "0"; paperBlob = null; $("#paperShot").hidden = true;
@@ -1126,6 +1161,301 @@ $("#paperSave").addEventListener("click", async () => {
   $("#paperModal").hidden = true; openNote(note.id); save();
   toast(n ? `Saved. ${fmt(n)} handwritten words added to today.` : "Photo saved. Add the text later to count the words.");
 });
+
+// ---- Writing replay ----
+const REC = {};
+let recSaveT = null;
+const OUTRO = 1800;
+function applyOp(text, op) { return text.slice(0, op[1]) + op[3] + text.slice(op[1] + op[2]); }
+function loadRec(n) {
+  if (REC[n.id]) return;
+  const id = n.id, atOpen = n.body || "";
+  REC[id] = { base: atOpen, ops: [], last: 0, pending: true, dirty: false };
+  replayDB.get(id).then(saved => {
+    const cur = REC[id]; if (!cur) return;
+    if (saved && Array.isArray(saved.ops) && saved.ops.length) {
+      let t = saved.base || ""; for (const op of saved.ops) t = applyOp(t, op);
+      if (t === atOpen) { cur.base = saved.base || ""; cur.ops = saved.ops.concat(cur.ops); if (!cur.ops.length || !cur.last) cur.last = saved.last || cur.last; }
+    }
+    cur.pending = false;
+    if (cur.dirty) { clearTimeout(recSaveT); recSaveT = setTimeout(saveRecs, 500); }
+  }).catch(() => { if (REC[id]) REC[id].pending = false; });
+}
+function recordEdit(n, oldT, newT, it) {
+  if (oldT === newT) return;
+  if (!REC[n.id]) loadRec(n);
+  const r = REC[n.id];
+  if (r.ops.length > 80000) return;
+  const lo = oldT.length, ln = newT.length, mx = Math.min(lo, ln);
+  let p = 0; while (p < mx && oldT.charCodeAt(p) === newT.charCodeAt(p)) p++;
+  let q = 0; while (q < mx - p && oldT.charCodeAt(lo - 1 - q) === newT.charCodeAt(ln - 1 - q)) q++;
+  const now = Date.now(), dt = r.last ? now - r.last : 0; r.last = now;
+  const op = [dt, p, lo - p - q, newT.slice(p, ln - q)];
+  if (it === "insertFromPaste" || it === "insertFromDrop") op.push(1);
+  r.ops.push(op); r.dirty = true;
+  clearTimeout(recSaveT); recSaveT = setTimeout(saveRecs, 1500);
+}
+function saveRecs() {
+  clearTimeout(recSaveT);
+  for (const [id, r] of Object.entries(REC)) {
+    if (!r.dirty || r.pending) continue;
+    r.dirty = false;
+    replayDB.put(id, { base: r.base, ops: r.ops, last: r.last }).catch(() => { r.dirty = true; });
+  }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) saveRecs(); });
+
+const LOOKS = {
+  notebook: { name: "Notebook", bg: "#FBF6EA", ink: "#2B2A26", soft: "#8B8476", accent: "#3E9C12", rule: "#D6E1EE", margin: "#EFB1B1", font: "Literata", weight: 400, size: 54, lh: 1.55 },
+  night: { name: "Night", bg: "#0F1512", ink: "#EEF2EC", soft: "#8F9A91", accent: "#58CC22", font: "Literata", weight: 400, size: 54, lh: 1.55 },
+  typewriter: { name: "Typewriter", bg: "#F3EEE3", ink: "#262420", soft: "#7C766A", accent: "#B4361E", font: "Courier Prime", weight: 400, size: 50, lh: 1.5 },
+  hand: { name: "Handwriting", bg: "#FFFDF6", ink: "#1F3A8A", soft: "#7A86A8", accent: "#1F3A8A", rule: "#DCE6F5", font: "Caveat", weight: 500, size: 78, lh: 1.2 },
+  minimal: { name: "Minimal", bg: "#FFFFFF", ink: "#111111", soft: "#8A8A8A", accent: "#111111", font: "Nunito", weight: 700, size: 56, lh: 1.45 },
+  ink: { name: "Inkstreak", bg: "#4FC31A", card: "#FFFFFF", ink: "#23301F", soft: "#6B7A66", accent: "#3E9C12", font: "Literata", weight: 400, size: 52, lh: 1.55 }
+};
+const UIF = '"Nunito", system-ui, -apple-system, sans-serif';
+const fontOf = L => `${L.weight} ${L.size}px "${L.font}", Georgia, serif`;
+function fmtDur(ms) { const s = Math.round(ms / 1000); if (s < 60) return `${s} s`; const m = Math.round(s / 60); if (m < 60) return `${m} min`; const h = Math.floor(m / 60); return `${h} h ${m % 60} min`; }
+function clock(ms) { const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`; }
+
+const wrapCache = new Map(), widthCache = new Map();
+function mw(ctx, font, str) {
+  const k = font + "\u0001" + str; let w = widthCache.get(k);
+  if (w === undefined) { ctx.font = font; w = ctx.measureText(str).width; if (widthCache.size > 30000) widthCache.clear(); widthCache.set(k, w); }
+  return w;
+}
+function wrapPara(ctx, font, para, maxW) {
+  const key = font + "\u0001" + maxW + "\u0001" + para;
+  let r = wrapCache.get(key); if (r) return r;
+  r = [];
+  if (!para) r.push([0, 0]);
+  else {
+    const re = /\S+\s*|\s+/g; let m, ls = 0, lw = 0;
+    while ((m = re.exec(para))) {
+      const tok = m[0], ts = m.index, core = tok.replace(/\s+$/, ""), wCore = mw(ctx, font, core), wTok = mw(ctx, font, tok);
+      if (lw > 0 && lw + wCore > maxW) { r.push([ls, ts]); ls = ts; lw = 0; }
+      if (wCore > maxW) {
+        let acc = 0;
+        for (let k = ts; k < ts + core.length; k++) { const cw = mw(ctx, font, para[k]); if (acc + cw > maxW && k > ls) { r.push([ls, k]); ls = k; acc = 0; } acc += cw; }
+        lw = acc + (wTok - wCore); continue;
+      }
+      lw += wTok;
+    }
+    r.push([ls, para.length]);
+  }
+  if (wrapCache.size > 5000) wrapCache.clear();
+  wrapCache.set(key, r); return r;
+}
+function layoutText(ctx, font, text, maxW, cur) {
+  const paras = text.split("\n"), lines = []; let off = 0, curLine = 0;
+  for (const para of paras) {
+    for (const [a, b] of wrapPara(ctx, font, para, maxW)) { if (cur >= off + a && cur <= off + b) curLine = lines.length; lines.push([off + a, off + b]); }
+    off += para.length + 1;
+  }
+  return { lines, curLine };
+}
+
+function buildTimeline(n, mode, lenS) {
+  const final = n.body || "", target = Math.max(5000, lenS * 1000 - OUTRO);
+  if (mode === "type") {
+    const D = Math.min(target, Math.max(3000, final.length * 45));
+    return { mode, final, D, words: wc(final) };
+  }
+  const r = REC[n.id], ops = r.ops, N = ops.length;
+  const times = new Float64Array(N), active = new Float64Array(N), pauses = [];
+  let c = 0, at = 0, backs = 0, pasted = 0;
+  for (let i = 0; i < N; i++) {
+    const op = ops[i], g = i ? op[0] : 0;
+    at += Math.min(g, 30000); active[i] = at;
+    c += Math.min(g, 700) + (op[3].length > 40 ? 350 : 0); times[i] = c;
+    if (g > 60000) pauses.push({ i, g });
+    if (op[2] > 0 && !op[3]) backs++;
+    if (op[4]) pasted += wc(op[3]);
+  }
+  const D = Math.min(target, Math.max(3000, c * 2.5)), k = c > 0 ? D / c : 1;
+  for (let i = 0; i < N; i++) times[i] *= k;
+  for (const p of pauses) p.t = times[p.i];
+  return { mode, base: r.base, ops, times, active, pauses, D, activeTotal: at, backs, pasted, final, words: wc(final) };
+}
+function newPlayer(n, opts) {
+  const tl = buildTimeline(n, opts.mode, opts.len);
+  return { n, opts, tl, text: tl.mode === "type" ? "" : tl.base, cur: tl.mode === "type" ? 0 : tl.base.length, i: 0, top: 0, lastOp: -1e9, act: 0 };
+}
+function advance(pl, t) {
+  const tl = pl.tl;
+  if (tl.mode === "type") {
+    const k = t >= tl.D ? tl.final.length : Math.floor(Math.max(0, t) / tl.D * tl.final.length);
+    if (k !== pl.cur) pl.lastOp = t; pl.text = tl.final.slice(0, k); pl.cur = k; return;
+  }
+  while (pl.i < tl.ops.length && tl.times[pl.i] <= t) {
+    const op = tl.ops[pl.i]; pl.text = applyOp(pl.text, op); pl.cur = op[1] + op[3].length; pl.act = tl.active[pl.i]; pl.lastOp = t; pl.i++;
+  }
+}
+function fitLine(ctx, str, maxW) { if (ctx.measureText(str).width <= maxW) return str; while (str.length > 2 && ctx.measureText(str + "…").width > maxW) str = str.slice(0, -1); return str + "…"; }
+function drawFrame(ctx, W, H, pl, t, snap) {
+  const L = LOOKS[pl.opts.look] || LOOKS.notebook, tl = pl.tl, n = pl.n, inset = L.card ? 44 : 0;
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.globalAlpha = 1;
+  ctx.fillStyle = L.bg; ctx.fillRect(0, 0, W, H);
+  if (L.card) { ctx.fillStyle = L.card; rr(ctx, inset, inset, W - 2 * inset, H - 2 * inset, 44); ctx.fill(); }
+  const pad = inset + 78, x0 = pad, maxW = W - pad * 2;
+  let y = inset + 112;
+  if (pl.opts.title) { ctx.fillStyle = L.ink; ctx.font = `900 54px ${UIF}`; ctx.fillText(fitLine(ctx, noteTitle(n), maxW), x0, y); y += 52; }
+  const date = new Date(n.createdAt || Date.now()).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const sub = tl.mode === "real" ? `${date} · ${fmtDur(tl.activeTotal)} of writing in ${Math.round((tl.D + OUTRO) / 1000)} s` : date;
+  ctx.fillStyle = L.soft; ctx.font = `800 30px ${UIF}`; ctx.fillText(fitLine(ctx, sub, maxW), x0, y + 4);
+  if (tl.mode === "real") { ctx.font = `900 22px ${UIF}`; const tag = "REAL WRITING REPLAY", tw = ctx.measureText(tag).width + 28; ctx.fillStyle = L.accent; rr(ctx, x0, y + 24, tw, 40, 20); ctx.fill(); ctx.fillStyle = L.card || L.bg; ctx.fillText(tag, x0 + 14, y + 52); y += 52; }
+  const font = fontOf(L), LH = Math.round(L.size * L.lh), bodyTop = y + 40 + L.size, footH = 140, bodyBot = H - inset - footH;
+  ctx.font = font;
+  const { lines, curLine } = layoutText(ctx, font, pl.text, maxW, pl.cur);
+  const V = Math.max(3, Math.floor((bodyBot - bodyTop) / LH) + 1);
+  const target = Math.max(0, curLine - (V - 2));
+  if (snap) pl.top = target; else { pl.top += (target - pl.top) * 0.2; if (Math.abs(target - pl.top) < 0.01) pl.top = target; }
+  ctx.save(); ctx.beginPath(); ctx.rect(inset, bodyTop - L.size - 6, W - 2 * inset, bodyBot - bodyTop + L.size + 6); ctx.clip();
+  const first = Math.max(0, Math.floor(pl.top) - 1);
+  if (L.rule) { ctx.strokeStyle = L.rule; ctx.lineWidth = 2; for (let k = first; k < first + V + 3; k++) { const ly = bodyTop + (k - pl.top) * LH + Math.round(L.size * 0.28); ctx.beginPath(); ctx.moveTo(inset + 24, ly); ctx.lineTo(W - inset - 24, ly); ctx.stroke(); } }
+  if (L.margin) { ctx.strokeStyle = L.margin; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0 - 28, 0); ctx.lineTo(x0 - 28, H); ctx.stroke(); }
+  ctx.fillStyle = L.ink; ctx.font = font;
+  for (let k = first; k < Math.min(lines.length, first + V + 3); k++) { const [a, b] = lines[k]; ctx.fillText(pl.text.slice(a, b).replace(/\s+$/, ""), x0, bodyTop + (k - pl.top) * LH); }
+  if (t < tl.D && (t - pl.lastOp < 400 || Math.floor(t / 480) % 2 === 0)) {
+    const ln = lines[curLine] || [0, 0], cx = x0 + mw(ctx, font, pl.text.slice(ln[0], pl.cur)), cy = bodyTop + (curLine - pl.top) * LH;
+    ctx.fillStyle = L.accent; ctx.fillRect(cx + 3, cy - L.size * 0.82, 5, L.size * 1.0);
+  }
+  ctx.restore();
+  if (tl.mode === "real") {
+    for (const p of tl.pauses) if (t >= p.t && t < p.t + 1100) {
+      const label = `⏸ ${fmtDur(p.g)} later`; ctx.font = `900 34px ${UIF}`; const w = ctx.measureText(label).width + 48;
+      ctx.fillStyle = L.ink; rr(ctx, (W - w) / 2, bodyBot - 90, w, 66, 33); ctx.fill(); ctx.fillStyle = L.card || L.bg; ctx.textAlign = "center"; ctx.fillText(label, W / 2, bodyBot - 45); ctx.textAlign = "left";
+    }
+  }
+  const fy = H - inset - 64;
+  drawInky(ctx, x0, fy - 50, 0.52);
+  ctx.fillStyle = L.ink; ctx.font = `900 34px ${UIF}`; ctx.fillText("inkstreak.app", x0 + 64, fy);
+  ctx.textAlign = "right"; ctx.fillStyle = L.soft; ctx.font = `800 31px ${UIF}`;
+  ctx.fillText(tl.mode === "real" ? `${fmt(wc(pl.text))} words · ${clock(pl.act)}` : `${fmt(wc(pl.text))} words`, W - pad, fy); ctx.textAlign = "left";
+  if (t > tl.D) {
+    const a = Math.min(1, (t - tl.D) / 450); ctx.globalAlpha = a;
+    ctx.fillStyle = L.card || L.bg; ctx.fillRect(0, 0, W, H);
+    if (L.card) { ctx.fillStyle = L.bg; ctx.fillRect(0, 0, W, inset); ctx.fillRect(0, H - inset, W, inset); ctx.fillRect(0, 0, inset, H); ctx.fillRect(W - inset, 0, inset, H); ctx.fillStyle = L.card; }
+    ctx.textAlign = "center"; const cy = H / 2 - 120;
+    drawInky(ctx, W / 2 - 60, cy - 260, 1.2);
+    ctx.fillStyle = L.ink; ctx.font = `900 150px ${UIF}`; ctx.fillText(fmt(tl.words), W / 2, cy + 40);
+    ctx.font = `900 50px ${UIF}`; ctx.fillText("words", W / 2, cy + 110);
+    ctx.fillStyle = L.soft; ctx.font = `800 36px ${UIF}`;
+    if (tl.mode === "real") { ctx.fillText(`Written in ${fmtDur(tl.activeTotal)}`, W / 2, cy + 190); ctx.fillText(`${fmt(tl.backs)} deletes · ${fmt(tl.pasted)} words pasted`, W / 2, cy + 244); }
+    else ctx.fillText("Written in Inkstreak", W / 2, cy + 190);
+    ctx.fillStyle = L.accent; ctx.font = `900 46px ${UIF}`; ctx.fillText("inkstreak.app", W / 2, cy + 340);
+    ctx.textAlign = "left"; ctx.globalAlpha = 1;
+  }
+}
+
+const rp = { n: null, opts: null, canReal: false, anim: null, recorder: null, endRes: null, cancel: false, blob: null, url: null, ext: "mp4" };
+const rpCanvas = () => $("#rpCanvas");
+function rpSize() { return rp.opts.size === "post" ? [1080, 1350] : [1080, 1920]; }
+async function rpFonts() {
+  const L = LOOKS[rp.opts.look] || LOOKS.notebook;
+  try { await Promise.all([document.fonts.load(fontOf(L)), document.fonts.load(`900 54px ${UIF}`), document.fonts.load(`800 30px ${UIF}`)]); } catch (e) {}
+}
+function rpStop() { if (rp.anim) cancelAnimationFrame(rp.anim); rp.anim = null; $("#rpPlay").textContent = "▶ Play preview"; }
+async function rpPreview() {
+  rpStop(); await rpFonts();
+  const c = rpCanvas(), [W, H] = rpSize(); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const pl = newPlayer(rp.n, rp.opts); advance(pl, pl.tl.D * 0.999); drawFrame(c.getContext("2d"), W, H, pl, pl.tl.D * 0.999, true);
+  const secs = Math.round((pl.tl.D + OUTRO) / 1000);
+  $("#rpInfo").textContent = pl.tl.mode === "real" ? `${fmtDur(pl.tl.activeTotal)} of writing, ${fmt(pl.tl.ops.length)} edits → ${secs} s video` : `${fmt(pl.tl.words)} words typed out → ${secs} s video`;
+}
+function rpRun(onProgress, onEnd) {
+  rpStop();
+  const c = rpCanvas(), ctx = c.getContext("2d"), [W, H] = rpSize(), pl = newPlayer(rp.n, rp.opts), total = pl.tl.D + OUTRO;
+  let t0 = null;
+  const step = now => {
+    if (t0 === null) t0 = now;
+    const t = now - t0; advance(pl, t); drawFrame(ctx, W, H, pl, Math.min(t, total), false);
+    if (onProgress) onProgress(Math.min(1, t / total));
+    if (t < total) rp.anim = requestAnimationFrame(step); else { rp.anim = null; if (onEnd) onEnd(); }
+  };
+  rp.anim = requestAnimationFrame(step);
+}
+function rpControls() {
+  const o = rp.opts;
+  $("#rpLooks").innerHTML = Object.entries(LOOKS).map(([k, L]) => `<button class="rp-look" type="button" data-look="${k}" aria-pressed="${o.look === k}"><i style="background:${L.card || L.bg};${L.card ? `box-shadow:inset 0 0 0 6px ${L.bg};` : ""}border:1px solid rgba(0,0,0,.12);font:${L.weight} 22px '${L.font}',serif;color:${L.ink};display:grid;place-items:center">Aa</i>${L.name}</button>`).join("");
+  document.querySelectorAll("#rpMode [data-mode]").forEach(b => { b.setAttribute("aria-pressed", String(o.mode === b.dataset.mode)); b.disabled = b.dataset.mode === "real" && !rp.canReal; });
+  document.querySelectorAll("#rpSize [data-rsize]").forEach(b => b.setAttribute("aria-pressed", String(o.size === b.dataset.rsize)));
+  document.querySelectorAll("#rpLen [data-len]").forEach(b => b.setAttribute("aria-pressed", String(o.len === +b.dataset.len)));
+  $("#rpTitle").checked = !!o.title;
+  $("#rpModeNote").textContent = o.mode === "real" ? "Shows exactly how you wrote it: pauses, deletes and rewrites, sped up."
+    : rp.canReal ? "Types your finished note out smoothly. Good for polished posts." : "Real replay records from now on as you type in Inkstreak. This note was written earlier, pasted or scanned, so it plays as a clean typewriter.";
+}
+function rpSavePrefs() { const { look, size, len, title } = rp.opts; S.settings.rp = { look, size, len, title }; save(); }
+async function openReplay() {
+  const n = activeNote();
+  if (!n || !wc(n.body)) { toast("Write something in this note first."); return; }
+  saveRecs();
+  for (let k = 0; k < 30 && REC[n.id] && REC[n.id].pending; k++) await new Promise(r => setTimeout(r, 50));
+  const r = REC[n.id]; rp.n = n; rp.canReal = !!(r && r.ops.length >= 3);
+  rp.opts = Object.assign({ look: "notebook", size: "story", len: 30, title: true }, S.settings.rp || {}, { mode: rp.canReal ? "real" : "type" });
+  $("#rpOut").hidden = true; $("#rpFoot").textContent = "The video is made on your phone. Nothing is uploaded. Keep this screen open while it records.";
+  $("#replayModal").hidden = false; rpControls(); rpPreview();
+}
+function closeReplay() {
+  if ($("#replayModal").hidden) return;
+  rpStop();
+  if (rp.recorder) { rp.cancel = true; try { if (rp.recorder.state !== "inactive") rp.recorder.stop(); } catch (e) {} if (rp.endRes) rp.endRes(); }
+  $("#replayModal").hidden = true;
+}
+async function rpMake() {
+  if (rp.recorder) return;
+  const c = rpCanvas(); let mime = "";
+  const types = ["video/mp4;codecs=avc1.42E01E", "video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  try { if (window.MediaRecorder && c.captureStream) mime = types.find(m => MediaRecorder.isTypeSupported(m)) || ""; } catch (e) {}
+  if (!mime) { $("#rpFoot").textContent = "This browser can't make videos. Tap Play preview and use your phone's screen recording instead."; toast("Use screen recording for this browser."); return; }
+  rpStop(); await rpFonts();
+  const [W, H] = rpSize(); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  let stream, rec;
+  try { stream = c.captureStream(30); try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 }); } catch (e) { rec = new MediaRecorder(stream); } }
+  catch (e) { toast("Couldn't start the video. Use Play preview with screen recording."); return; }
+  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(res => rec.onstop = res);
+  rp.recorder = rec; rp.cancel = false;
+  const btn = $("#rpMake"); btn.disabled = true; $("#rpPlay").disabled = true;
+  rec.start(500);
+  await new Promise(res => { rp.endRes = res; rpRun(p => { btn.textContent = `Recording… ${Math.round(p * 100)}%`; }, res); });
+  rp.endRes = null;
+  await new Promise(r => setTimeout(r, 300));
+  try { if (rec.state !== "inactive") rec.stop(); } catch (e) {}
+  await stopped; stream.getTracks().forEach(tr => tr.stop());
+  rp.recorder = null; btn.disabled = false; $("#rpPlay").disabled = false; btn.textContent = "🎬 Make video";
+  if (rp.cancel) return;
+  const type = (rec.mimeType || mime).split(";")[0] || "video/mp4", blob = new Blob(chunks, { type });
+  if (!blob.size) { toast("The video came out empty. Try again, or use screen recording."); return; }
+  rp.blob = blob; rp.ext = type.includes("mp4") ? "mp4" : "webm";
+  if (rp.url) URL.revokeObjectURL(rp.url); rp.url = URL.createObjectURL(blob);
+  const v = $("#rpVideo"); v.src = rp.url; $("#rpOut").hidden = false;
+  $("#rpFoot").textContent = rp.ext === "mp4" ? "Ready. Share it to Instagram, Threads, YouTube or WhatsApp, or save it to your Photos." : "Saved as a WebM video. If an app won't take it, make the video in Safari or Chrome on your phone.";
+  setTimeout(() => $("#rpOut").scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+  rpPreview();
+}
+function rpDownload() { if (!rp.url) return; try { const a = document.createElement("a"); a.href = rp.url; a.download = `inkstreak-replay-${dayKey()}.${rp.ext}`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the video to save it."); } }
+$("#replayBtn").addEventListener("click", openReplay);
+$("#rpClose").addEventListener("click", closeReplay);
+$("#replayModal").addEventListener("click", e => { if (e.target.id === "replayModal" && !rp.recorder) closeReplay(); });
+$("#rpPlay").addEventListener("click", () => { if (rp.anim) { rpPreview(); return; } $("#rpPlay").textContent = "■ Stop"; rpRun(null, () => { $("#rpPlay").textContent = "▶ Play preview"; }); });
+$("#rpMake").addEventListener("click", rpMake);
+$("#rpDl").addEventListener("click", rpDownload);
+$("#rpShare").addEventListener("click", async () => {
+  if (!rp.blob) return;
+  const f = new File([rp.blob], `inkstreak-replay-${dayKey()}.${rp.ext}`, { type: rp.blob.type });
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "Written in Inkstreak · inkstreak.app" }); return; } }
+  catch (e) { if (e && e.name === "AbortError") return; }
+  rpDownload();
+});
+document.querySelector("#replayModal .sheet").addEventListener("click", e => {
+  if (rp.recorder) return;
+  const L = e.target.closest("[data-look]"), M = e.target.closest("[data-mode]"), Z = e.target.closest("[data-rsize]"), N = e.target.closest("[data-len]");
+  if (!(L || M || Z || N)) return;
+  if (L) rp.opts.look = L.dataset.look; if (M && !M.disabled) rp.opts.mode = M.dataset.mode; if (Z) rp.opts.size = Z.dataset.rsize; if (N) rp.opts.len = +N.dataset.len;
+  $("#rpOut").hidden = true; rpSavePrefs(); rpControls(); rpPreview();
+});
+$("#rpTitle").addEventListener("change", e => { rp.opts.title = e.target.checked; rpSavePrefs(); rpPreview(); });
 
 // ---- Human receipt ----
 function dur(ms) { const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h ? `${h}h ${m}m` : `${m}m ${pad(s % 60)}s`; }
