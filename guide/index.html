@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{var _t=localStorage.getItem("inkstreak.theme");if(_t==="light"||_t==="dark")document.documentElement.setAttribute("data-theme",_t)}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="20 ways to use your own notes and journal with AI: find your patterns, review decisions, rebuild your year, find story ideas. Copy-paste prompts, and how to keep your notes out of AI training.">
 <meta name="theme-color" content="#4FC31A">
@@ -113,6 +114,7 @@ footer{margin-top:30px;font-size:13px;color:var(--soft)}
   <div class="smenu-panel">
     <div><p class="smenu-h">Free on the web</p><a href="../write/">Write and track words</a><a href="../write/#paper">Count a paper page</a><a href="../wrapped/">Writing Wrapped</a><a href="../guide/">Use your notes with AI</a></div>
     <div><p class="smenu-h">The app</p><a href="../#features">How it works</a><a href="../#pricing">Pricing</a><a href="../write/#get-app">iPhone and Android</a><a href="../support.html">Help</a><a href="../privacy.html">Privacy</a></div>
+    <div class="smenu-theme"><p class="smenu-h">Theme</p><div class="smenu-seg" role="group" aria-label="Theme"><button type="button" data-th="auto">Auto</button><button type="button" data-th="light">☀️ Light</button><button type="button" data-th="dark">🌙 Dark</button></div><p class="smenu-note">Auto follows your phone or computer.</p></div>
     <div><p class="smenu-h">Guides</p><a href="../journal-prompts.html">228 journal prompts</a><a href="../journaling.html">Journaling</a><a href="../handwritten-journal.html">Handwritten journals</a><a href="../writers.html">For writers</a><a href="../students.html">For students</a></div>
   </div>
 </details>
@@ -124,10 +126,20 @@ footer{margin-top:30px;font-size:13px;color:var(--soft)}
 .smenu-panel div{display:grid;gap:6px;align-content:start}
 .smenu-panel a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
 .smenu-panel a:hover{text-decoration:underline}
+.smenu-theme{grid-column:1/-1;order:-1;border-bottom:2px solid var(--line);padding-bottom:12px}
+.smenu-panel .smenu-seg{display:flex;gap:6px;flex-wrap:wrap}
+.smenu-seg button{border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 14px;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.smenu-seg button[aria-pressed="true"]{background:var(--ink);color:var(--card,var(--panel));border-color:var(--ink)}
+.smenu-note{font-size:12.5px;color:var(--soft);margin:6px 0 0}
+.no-theme .smenu-theme{display:none}
 .smenu-h{font-size:11.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin:0 0 2px}
 @media (max-width:700px){.smenu-panel{position:fixed;left:16px;right:16px;top:calc(64px + env(safe-area-inset-top,0px));width:auto;max-width:none;grid-template-columns:1fr 1fr;max-height:calc(100vh - 90px);overflow:auto}.smenu-panel div:last-child{grid-column:1/-1}}
 </style>
-<script>document.addEventListener("click",function(e){document.querySelectorAll(".smenu[open]").forEach(function(d){if(!d.contains(e.target)||e.target.closest(".smenu-panel a"))d.open=false;});});</script>
+<script>(function(){var K="inkstreak.theme";function cur(){try{return localStorage.getItem(K)||"auto"}catch(e){return "auto"}}
+function mark(){var t=cur();document.querySelectorAll("[data-th]").forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-th")===t))})}
+function apply(t){try{t==="auto"?localStorage.removeItem(K):localStorage.setItem(K,t)}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);mark();try{window.umami&&window.umami.track("theme",{theme:t})}catch(e){}}
+document.addEventListener("click",function(e){var b=e.target.closest("[data-th]");if(b){e.stopPropagation();apply(b.getAttribute("data-th"))}},true);mark();})();
+document.addEventListener("click",function(e){document.querySelectorAll(".smenu[open]").forEach(function(d){if(!d.contains(e.target)||e.target.closest(".smenu-panel a"))d.open=false;});});</script>
 
   </div>
 
