@@ -73,8 +73,8 @@ nav a[aria-current="page"]{background:var(--green-t);color:var(--green-d)}
 .chip.hot{border-color:var(--orange);color:var(--orange)}
 @media (max-width:640px){
   .hrow{gap:8px}
-  nav{order:3;width:100%;margin-left:0;justify-content:space-between}
-  nav a{flex:1;text-align:center}
+  nav{order:3;width:100%;margin-left:0;justify-content:space-between;gap:2px}
+  nav a{flex:1;text-align:center;padding:7px 4px;font-size:14px}
 }
 
 /* Buttons */
@@ -202,7 +202,7 @@ body.focus main{padding-block:8px}
 .sheet{background:var(--card);border-radius:20px;padding:18px;max-width:440px;width:100%;max-height:90vh;overflow:auto;display:grid;gap:12px}
 .sheet img{width:100%;border-radius:14px;border:2px solid var(--line)}
 .seg{display:flex;gap:6px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:800;z-index:60;max-width:calc(100% - 32px);text-align:center}
 .nudge{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--green-t);border:2px solid var(--green);border-radius:var(--r);padding:12px 16px;margin-bottom:16px}
 .nudge.warn{background:var(--card);border-color:var(--orange)}
 .nudge p{flex:1;min-width:220px;font-size:14.5px}
@@ -257,6 +257,28 @@ body.focus main{padding-block:8px}
 .rp-font{font-size:15px}
 .rp-look[aria-pressed="true"]{border-color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
 #rpVideo{width:100%;max-height:50vh;border-radius:12px;background:#000}
+.tl{list-style:none;margin:0;padding:0 0 0 18px;border-left:3px solid var(--line);display:grid;gap:12px}
+.ty{position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;gap:8px}
+.ty::before{content:"";position:absolute;left:-29px;top:18px;width:16px;height:16px;border-radius:50%;background:var(--card);border:3px solid var(--line)}
+.ty.has::before{background:var(--green);border-color:var(--green-d)}
+.ty.gap{background:transparent;border-style:dashed;padding:6px 12px}
+.ty.gap::before{width:10px;height:10px;left:-26px;top:14px}
+.ty-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ty-h b{font-size:20px;font-weight:900}
+.ty-h .grow{flex:1}
+.mo{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit;width:100%}
+.mo:hover{border-color:var(--green)}
+.mo .em{font-size:24px;line-height:1.2}
+.mo-b{display:grid;gap:3px;min-width:0}
+.mo-b b{font-weight:900}
+.mo-t{font:400 15px/1.5 var(--serif);color:var(--soft);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.ty-notes{font-size:13.5px}
+.linkish{border:none;background:none;color:var(--green-d);font:800 13.5px var(--ui);cursor:pointer;padding:0;text-decoration:underline}
+.emo{display:flex;gap:6px;flex-wrap:wrap}
+.emo-b{width:42px;height:42px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:20px;cursor:pointer}
+.emo-b[aria-pressed="true"]{border-color:var(--green);background:var(--green-t)}
+#moText{width:100%;border:2px solid var(--line);border-radius:12px;padding:10px;font:400 16px/1.5 var(--serif);background:var(--paper);resize:vertical}
+#stShareImg{width:100%;border-radius:14px;border:2px solid var(--line)}
 footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -279,6 +301,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     <nav aria-label="Sections">
       <a href="#write" data-view="write">Write</a>
       <a href="#notes" data-view="notes">Notes</a>
+      <a href="#story" data-view="story">Story</a>
       <a href="#progress" data-view="progress">Progress</a>
       <a href="#get-app" data-view="get-app">App</a>
     </nav>
@@ -288,7 +311,7 @@ footer{font-size:13px;color:var(--soft);padding-block:10px 30px}
     </div>
     <details class="smenu"><summary aria-label="Menu">☰</summary>
   <div class="smenu-panel">
-    <div><p class="smenu-h">Free on the web</p><a href="../write/">Write and track words</a><a href="../write/#paper">Count a paper page</a><a href="../wrapped/">Writing Wrapped</a><a href="../guide/">Use your notes with AI</a></div>
+    <div><p class="smenu-h">Free on the web</p><a href="../write/">Write and track words</a><a href="../write/#paper">Count a paper page</a><a href="../write/#story">My Story, year by year</a><a href="../wrapped/">Writing Wrapped</a><a href="../guide/">Use your notes with AI</a></div>
     <div><p class="smenu-h">The app</p><a href="../#features">How it works</a><a href="../#pricing">Pricing</a><a href="../write/#get-app">iPhone and Android</a><a href="../support.html">Help</a><a href="../privacy.html">Privacy</a></div>
     <div class="smenu-theme"><p class="smenu-h">Theme</p><div class="smenu-seg" role="group" aria-label="Theme"><button type="button" data-th="auto">Auto</button><button type="button" data-th="light">☀️ Light</button><button type="button" data-th="dark">🌙 Dark</button></div><p class="smenu-note">Auto follows your phone or computer.</p></div>
     <div><p class="smenu-h">Guides</p><a href="../journal-prompts.html">228 journal prompts</a><a href="../journaling.html">Journaling</a><a href="../handwritten-journal.html">Handwritten journals</a><a href="../writers.html">For writers</a><a href="../students.html">For students</a></div>
@@ -363,6 +386,7 @@ document.addEventListener("click",function(e){document.querySelectorAll(".smenu[
           <span class="grow soft" id="saved" aria-live="polite" style="white-space:nowrap">Saves as you type</span>
           <button class="btn small primary" id="saveBtn" type="button">✓ Save</button>
           <div class="sprint" id="sprintBox"></div>
+          <button class="btn small" id="storyBtn" type="button">📖 Add to story</button>
           <button class="btn small" id="replayBtn" type="button">▶ Replay video</button>
           <button class="btn small" id="receiptBtn" type="button">🧾 Human receipt</button>
           <button class="btn small" id="focusBtn" type="button">Focus</button>
@@ -385,6 +409,28 @@ document.addEventListener("click",function(e){document.querySelectorAll(".smenu[
     </div>
     <div class="ntags" id="nTags" role="group" aria-label="Filter by category"></div>
     <div class="ngrid" id="nGrid"></div>
+  </section>
+
+  <!-- STORY -->
+  <section class="view stack" id="v-story" hidden>
+    <div class="card st-setup" id="storySetup">
+      <h2>Your story, year by year</h2>
+      <p class="soft" style="max-width:60ch;margin-top:6px">From the year you were born to today: the moments that made you. Fill in the past once with quick prompts, then keep adding as you write. It stays on this device.</p>
+      <div class="form" style="margin-top:14px"><div class="row">
+        <label for="stBorn">Year you were born<input id="stBorn" type="number" inputmode="numeric" min="1920" placeholder="1998" style="width:130px"></label>
+        <label for="stName">Your first name (optional)<input id="stName" type="text" maxlength="30" placeholder="For the title"></label>
+      </div><button class="btn primary" type="button" id="stStart" style="justify-self:start">Start my story</button></div>
+    </div>
+    <div id="storyMain" class="stack" hidden>
+      <div class="nhead">
+        <div><h2 id="stTitle">My story</h2><p class="soft num" id="stSum"></p></div>
+        <button class="btn primary" type="button" id="stAdd">+ Add a moment</button>
+        <button class="btn" type="button" id="stShare">Share</button>
+      </div>
+      <div class="card" id="stPromptsCard"><h3>Fill in your past, one tap at a time</h3><p class="soft" style="font-size:14px;margin:2px 0 10px">Each prompt lands in the right year. You can change it.</p><div class="ntags" id="stPrompts"></div></div>
+      <div class="ntools" style="align-items:center"><label class="toggle" style="font-size:14px;flex:1;white-space:nowrap"><input type="checkbox" id="stEmpty"> Show empty years</label><select id="stOrder" aria-label="Order"><option value="asc">Birth → now</option><option value="desc">Now → birth</option></select></div>
+      <ol class="tl" id="stList"></ol>
+    </div>
   </section>
 
   <!-- PROGRESS -->
@@ -525,6 +571,31 @@ document.addEventListener("click",function(e){document.querySelectorAll(".smenu[
     <p class="soft" style="font-size:12.5px" id="rpFoot"></p>
   </div>
 </div>
+<div class="modal" id="momentModal" hidden role="dialog" aria-modal="true" aria-labelledby="moH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="moH" style="flex:1">Add a moment</h2><button class="btn small ghost" type="button" data-close="momentModal">Close</button></div>
+    <p class="soft" id="moHint" style="font-size:14px"></p>
+    <div class="form" style="margin-top:0">
+      <div class="row"><label for="moYear">Year<input id="moYear" type="number" inputmode="numeric" style="width:110px"></label>
+        <label for="moMonth">Month (optional)<select id="moMonth"><option value="">–</option><option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select></label></div>
+      <div><p class="rp-label" style="margin-bottom:6px">Icon</p><div class="emo" id="moEmo"></div></div>
+      <label for="moTitle">What happened<input id="moTitle" type="text" maxlength="80"></label>
+      <label for="moText">Tell it in a few lines (optional)<textarea id="moText" rows="4"></textarea></label>
+      <label for="moNote" id="moNoteRow">Or bring in one of your notes<select id="moNote"></select></label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" id="moSave">Save moment</button><button class="btn ghost danger" type="button" id="moDel">Delete</button></div>
+  </div>
+</div>
+<div class="modal" id="storyShareModal" hidden role="dialog" aria-modal="true" aria-labelledby="stShareH">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:8px"><h2 id="stShareH" style="flex:1">Share my story</h2><button class="btn small ghost" type="button" data-close="storyShareModal">Close</button></div>
+    <img id="stShareImg" alt="Your story card">
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" id="stShareNative">Share image</button><button class="btn" type="button" id="stShareDl">Download</button></div>
+    <label for="stListText" class="rp-label" style="margin-top:4px">Or share it as a list</label>
+    <textarea id="stListText" rows="7" readonly style="width:100%;border:2px solid var(--line);border-radius:12px;padding:10px;font:400 14px/1.5 var(--serif);background:var(--paper)"></textarea>
+    <button class="btn" type="button" id="stCopy">Copy list</button>
+  </div>
+</div>
 <div class="modal" id="paperModal" hidden role="dialog" aria-modal="true" aria-labelledby="paperH">
   <div class="sheet">
     <div style="display:flex;align-items:center;gap:8px"><h2 id="paperH" style="flex:1">Add a paper page</h2><button class="btn small ghost" type="button" data-close="paperModal">Close</button></div>
@@ -645,6 +716,12 @@ function save() {
     renderSaved();
   }, 250);
 }
+function flushSave() {
+  clearTimeout(saveT);
+  try { localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; } catch (e) { storageOK = false; }
+}
+window.addEventListener("pagehide", flushSave);
+document.addEventListener("visibilitychange", () => { if (document.hidden) flushSave(); });
 
 // ---- Words per day ----
 const day = k => S.days[k] || (S.days[k] = { typed: 0, logged: 0 });
@@ -698,7 +775,7 @@ function chInfo() {
 }
 
 // ---- Rendering ----
-const views = ["write", "notes", "progress", "get-app"];
+const views = ["write", "notes", "story", "progress", "get-app"];
 function route() {
   let v = (location.hash || "#write").slice(1);
   if (v === "paper") { v = "write"; setTimeout(openPaper, 50); try { history.replaceState(null, "", "#write"); } catch (e) {} }
@@ -707,6 +784,7 @@ function route() {
   document.querySelectorAll("nav[aria-label=Sections] a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
   if (v === "progress") renderProgress();
   if (v === "notes") renderAllNotes();
+  if (v === "story") renderStory();
   if (v !== "write") track("tab_" + v);
 }
 function renderCounts() {
@@ -958,7 +1036,7 @@ function download(name, text, type) {
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   } catch (e) { toast("Your browser blocked the download. Use Copy backup instead."); }
 }
-function exportObj() { return { format: "inkstreak-backup", version: 1, source: "web", exportedAt: new Date().toISOString(), deviceId: S.deviceId, settings: S.settings, days: S.days, logs: S.logs, notes: S.notes }; }
+function exportObj() { return { format: "inkstreak-backup", version: 1, source: "web", exportedAt: new Date().toISOString(), deviceId: S.deviceId, settings: S.settings, days: S.days, logs: S.logs, notes: S.notes, story: S.story || null }; }
 function cleanNote(x) {
   return { id: String(x.id), title: String(x.title || ""), body: String(x.body || x.text || ""), tag: String(x.tag || x.category || ""),
     createdAt: +x.createdAt || Date.parse(x.createdAt) || Date.now(), updatedAt: +x.updatedAt || Date.parse(x.updatedAt) || Date.now(), deleted: !!x.deleted };
@@ -980,6 +1058,10 @@ function merge(inc) {
     d.typed = Math.max(+d.typed || 0, typed); d.logged = Math.max(+d.logged || 0, logged);
   });
   (Array.isArray(inc.logs) ? inc.logs : []).forEach(l => { if (l && l.id && l.day && !S.logs.some(y => y.id === l.id)) S.logs.push(l); });
+  if (inc.story && inc.story.born) {
+    if (!S.story || !S.story.born) S.story = inc.story;
+    else for (const [y, list] of Object.entries(inc.story.years || {})) { const mine = S.story.years[y] = S.story.years[y] || []; for (const m of list || []) { const ex = mine.find(x => x.id === m.id); if (!ex) mine.push(m); else if ((m.updatedAt || 0) > (ex.updatedAt || 0)) Object.assign(ex, m); } }
+  }
   return { notes, dayCount };
 }
 
@@ -1038,7 +1120,7 @@ $("#focusBtn").addEventListener("click", () => {
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && document.body.classList.contains("focus")) $("#focusBtn").click();
-  if (e.key === "Escape") { $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; closeReplay(); }
+  if (e.key === "Escape") { $("#momentModal").hidden = true; $("#storyShareModal").hidden = true; $("#shareModal").hidden = true; $("#portraitModal").hidden = true; $("#receiptModal").hidden = true; $("#paperModal").hidden = true; closeReplay(); }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); saveNow(); }
 });
 $("#logForm").addEventListener("submit", e => {
@@ -1266,6 +1348,187 @@ function sfx(kind) {
 }
 $("#soundBtn").addEventListener("click", () => { S.settings.sound = !S.settings.sound; save(); applyPage(); if (S.settings.sound) sfx("key"); track("sounds", { on: S.settings.sound ? "yes" : "no" }); });
 $("#body").addEventListener("beforeinput", e => { const it = e.inputType || ""; if (it.startsWith("delete")) sfx("del"); else if (it === "insertParagraph" || it === "insertLineBreak") sfx("enter"); else if (it.startsWith("insert") && it !== "insertFromPaste") sfx("key"); });
+
+// ---- My Story ----
+const ST_PROMPTS = [
+  { t: "Born", e: "👶", age: 0, q: "Where were you born? Who was there?" },
+  { t: "Earliest memory", e: "🌱", age: 3, q: "The first thing you remember." },
+  { t: "First school", e: "🎒", age: 5, q: "The school, the bag, the first friend." },
+  { t: "Best friend growing up", e: "🤝", age: 9, q: "Who was it, and what did you do together?" },
+  { t: "A trip I still remember", e: "🧳", age: 11, q: "Where, and what stayed with you?" },
+  { t: "Got my first phone", e: "📱", age: 14, q: "Which one, and who did you text first?" },
+  { t: "Finished school", e: "🎓", age: 17, q: "How it felt on the last day." },
+  { t: "Moved city", e: "🏙️", age: 18, q: "From where to where, and why." },
+  { t: "First job", e: "💼", age: 22, q: "The role, the first salary, the first boss." },
+  { t: "Fell in love", e: "❤️", age: null, q: "When you knew." },
+  { t: "Hardest year", e: "🌧️", age: null, q: "What happened, and what got you through." },
+  { t: "Proudest moment", e: "🏆", age: null, q: "The thing you'd tell your younger self about." },
+  { t: "Lost someone", e: "🕯️", age: null, q: "Who they were to you." },
+  { t: "Started something new", e: "🚀", age: null, q: "What you started, and why then." },
+  { t: "Started writing", e: "✍️", age: null, q: "When writing became yours." }
+];
+const ST_EMO = ["⭐", "👶", "🎒", "🎓", "💼", "❤️", "🏙️", "✈️", "🏠", "🏆", "🎉", "🌧️", "🕯️", "📱", "🚀", "✍️", "🤝", "🌱"];
+const MONTHS_S = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const thisYear = () => new Date().getFullYear();
+function storyMoments() { const out = []; const y = (S.story && S.story.years) || {}; for (const [yr, list] of Object.entries(y)) for (const m of list) out.push({ ...m, year: +yr }); return out; }
+function renderStory() {
+  const st = S.story;
+  $("#storySetup").hidden = !!(st && st.born); $("#storyMain").hidden = !(st && st.born);
+  if (!st || !st.born) { $("#stBorn").value = ""; return; }
+  const all = storyMoments(), yearsWith = new Set(all.map(m => m.year));
+  $("#stTitle").textContent = st.name ? `${st.name}'s story` : "My story";
+  $("#stSum").textContent = `Born ${st.born} · ${all.length} ${all.length === 1 ? "moment" : "moments"} across ${yearsWith.size} of ${thisYear() - st.born + 1} years`;
+  const usedTitles = new Set(all.map(m => (m.title || "").toLowerCase()));
+  const pr = ST_PROMPTS.filter(p => !usedTitles.has(p.t.toLowerCase()));
+  $("#stPromptsCard").hidden = !pr.length;
+  $("#stPrompts").innerHTML = pr.map(p => `<button class="ntag" type="button" data-prompt="${esc(p.t)}">${p.e} ${esc(p.t)}</button>`).join("");
+  const showEmpty = $("#stEmpty").checked, asc = $("#stOrder").value === "asc";
+  const notesByYear = {}; liveNotes().forEach(n => { const y = new Date(n.createdAt || n.updatedAt).getFullYear(); notesByYear[y] = (notesByYear[y] || 0) + 1; });
+  const rows = []; let gap = null;
+  const years = []; for (let y = st.born; y <= thisYear(); y++) years.push(y); if (!asc) years.reverse();
+  const flushGap = () => { if (gap) { rows.push(`<li class="ty gap"><div class="ty-h"><span class="soft">${gap.a === gap.b ? gap.a : `${Math.min(gap.a, gap.b)}–${Math.max(gap.a, gap.b)}`} · nothing here yet</span><button class="btn small ghost" type="button" data-addyear="${gap.a}">+ Add</button></div></li>`); gap = null; } };
+  for (const y of years) {
+    const ms = ((st.years || {})[y] || []).slice().sort((a, b) => (a.month || 0) - (b.month || 0));
+    const nn = notesByYear[y] || 0;
+    if (!ms.length && !nn && !showEmpty && y !== thisYear()) { if (gap) gap.b = y; else gap = { a: y, b: y }; continue; }
+    flushGap();
+    const age = y - st.born;
+    rows.push(`<li class="ty${ms.length ? " has" : ""}"><div class="ty-h"><b class="num">${y}</b><span class="soft num">${age === 0 ? "born" : "age " + age}</span><span class="grow"></span><button class="btn small ghost" type="button" data-addyear="${y}">+ Add</button>${ms.length ? `<button class="btn small ghost" type="button" data-shareyear="${y}">Share</button>` : ""}</div>
+      ${ms.map(m => `<button class="mo" type="button" data-mo="${m.id}" data-y="${y}"><span class="em">${esc(m.emoji || "⭐")}</span><span class="mo-b"><b>${esc(m.title || "Untitled")}${m.month ? ` <small class="soft">${MONTHS_S[m.month - 1]}</small>` : ""}</b>${m.text ? `<span class="mo-t">${esc(m.text)}</span>` : ""}${m.noteId ? `<small class="soft">📝 from a note</small>` : ""}</span></button>`).join("")}
+      ${nn ? `<p class="ty-notes soft">📝 ${nn} ${nn === 1 ? "note" : "notes"} written this year · <button class="linkish" type="button" data-addyear="${y}" data-fromnote="1">add one to your story</button></p>` : ""}</li>`);
+  }
+  flushGap();
+  $("#stList").innerHTML = rows.join("");
+}
+let moEdit = null, moEmo = "⭐";
+function openMoment(opts) {
+  const st = S.story; if (!st || !st.born) { location.hash = "#story"; toast("First tell us your birth year in Story."); return; }
+  moEdit = opts.id ? { id: opts.id, year: opts.year } : null;
+  const m = opts.id ? ((st.years[opts.year] || []).find(x => x.id === opts.id) || {}) : {};
+  $("#moH").textContent = opts.id ? "Edit moment" : "Add a moment";
+  $("#moYear").min = st.born; $("#moYear").max = thisYear();
+  $("#moYear").value = opts.year || m.year || thisYear(); $("#moMonth").value = String(m.month || opts.month || "");
+  $("#moTitle").value = m.title || opts.title || ""; $("#moText").value = m.text || opts.text || "";
+  moEmo = m.emoji || opts.emoji || "⭐"; $("#moHint").textContent = opts.q || "";
+  $("#moTitle").placeholder = opts.title ? opts.title : "Got my first job";
+  const notes = liveNotes().filter(n => wc(n.body));
+  $("#moNote").innerHTML = `<option value="">Choose a note…</option>` + notes.map(n => `<option value="${n.id}"${(m.noteId || opts.noteId) === n.id ? " selected" : ""}>${esc(noteTitle(n).slice(0, 60))} · ${new Date(n.createdAt || n.updatedAt).getFullYear()}</option>`).join("");
+  $("#moNoteRow").hidden = !notes.length;
+  $("#moDel").hidden = !opts.id;
+  renderEmo(); $("#momentModal").hidden = false;
+  setTimeout(() => (opts.focusNote ? $("#moNote") : $("#moTitle")).focus(), 60);
+}
+function renderEmo() { $("#moEmo").innerHTML = ST_EMO.map(e => `<button type="button" class="emo-b" data-emo="${e}" aria-pressed="${e === moEmo}">${e}</button>`).join(""); }
+function saveMoment() {
+  const st = S.story, y = Math.round(+$("#moYear").value), title = $("#moTitle").value.trim(), text = $("#moText").value.trim();
+  if (!(y >= st.born && y <= thisYear())) { toast(`Pick a year between ${st.born} and ${thisYear()}.`); return; }
+  if (!title && !text) { toast("Write what happened first."); return; }
+  st.years = st.years || {};
+  let m = null;
+  if (moEdit) { const list = st.years[moEdit.year] || []; const i = list.findIndex(x => x.id === moEdit.id); if (i >= 0) { m = list[i]; list.splice(i, 1); if (!list.length) delete st.years[moEdit.year]; } }
+  m = Object.assign(m || { id: uuid(), createdAt: Date.now() }, { title: title || text.split(/[.\n]/)[0].slice(0, 80), text, emoji: moEmo, month: +$("#moMonth").value || 0, noteId: $("#moNote").value || (m && m.noteId) || "", updatedAt: Date.now() });
+  (st.years[y] = st.years[y] || []).push(m);
+  flushSave(); $("#momentModal").hidden = true; renderStory();
+  track("story_moment", { source: m.noteId ? "note" : (ST_PROMPTS.some(p => p.t === m.title) ? "prompt" : "own"), edit: moEdit ? "yes" : "no" });
+  toast(moEdit ? "Moment updated." : `Added to ${y}.`);
+}
+function deleteMoment() {
+  const b = $("#moDel");
+  if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Tap again to delete"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Delete"; }, 3000); return; }
+  const list = S.story.years[moEdit.year] || [], i = list.findIndex(x => x.id === moEdit.id);
+  if (i >= 0) list.splice(i, 1); if (!list.length) delete S.story.years[moEdit.year];
+  delete b.dataset.armed; b.textContent = "Delete"; flushSave(); $("#momentModal").hidden = true; renderStory(); toast("Moment deleted.");
+}
+function storyText(onlyYear) {
+  const st = S.story, all = storyMoments().filter(m => !onlyYear || m.year === onlyYear).sort((a, b) => a.year - b.year || (a.month || 0) - (b.month || 0));
+  const head = onlyYear ? `${onlyYear} in my story` : (st.name ? `${st.name}'s story` : "My story");
+  return [head, "", ...all.map(m => `${m.year} · ${m.emoji || "⭐"} ${m.title}${m.text ? " – " + m.text.replace(/\s+/g, " ").slice(0, 140) : ""}`), "", "Written in Inkstreak · inkstreak.app"].join("\n");
+}
+let stCanvas = null, stShareYear = 0;
+async function storyCard(onlyYear) {
+  try { await Promise.all(["900 80px Nunito", "800 40px Nunito", "400 40px Literata"].map(f => document.fonts.load(f))); } catch (e) {}
+  const st = S.story, W = 1080, H = 1920, F = "Nunito, system-ui, sans-serif", SF = "Literata, Georgia, serif";
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d");
+  x.fillStyle = "#FBF6EA"; x.fillRect(0, 0, W, H);
+  x.strokeStyle = "#D6E1EE"; x.lineWidth = 2; for (let yy = 430; yy < H - 230; yy += 92) { x.beginPath(); x.moveTo(60, yy); x.lineTo(W - 60, yy); x.stroke(); }
+  x.strokeStyle = "#EFB1B1"; x.lineWidth = 3; x.beginPath(); x.moveTo(250, 380); x.lineTo(250, H - 230); x.stroke();
+  drawInky(x, 80, 90, 1.0);
+  x.fillStyle = "#2B2A26"; x.font = `900 76px ${F}`;
+  const head = onlyYear ? `${onlyYear}` : (st.name ? `${st.name}'s story` : "My story"); x.fillText(head, 200, 175);
+  const all = storyMoments().filter(m => !onlyYear || m.year === onlyYear).sort((a, b) => a.year - b.year || (a.month || 0) - (b.month || 0));
+  x.fillStyle = "#8B8476"; x.font = `800 36px ${F}`;
+  x.fillText(onlyYear ? `Age ${onlyYear - st.born} · ${all.length} ${all.length === 1 ? "moment" : "moments"}` : `Born ${st.born} · ${all.length} moments · ${new Set(all.map(m => m.year)).size} years`, 200, 235);
+  const maxRows = 16; let rows = all;
+  if (!onlyYear && rows.length > maxRows) { const by = {}; rows.forEach(m => { (by[m.year] = by[m.year] || []).push(m); }); rows = Object.values(by).map(l => l[0]); if (rows.length > maxRows) { const step = rows.length / maxRows; rows = Array.from({ length: maxRows }, (_, i) => rows[Math.floor(i * step)]); } }
+  rows = rows.slice(0, maxRows);
+  const roomy = rows.length <= 7;
+  let yy = 410, lastYear = null;
+  for (const m of rows) {
+    if (onlyYear) { x.fillStyle = "#2B2A26"; x.font = `800 34px ${F}`; x.fillText(m.month ? MONTHS_S[m.month - 1] : "", 90, yy); }
+    else if (m.year !== lastYear) { x.fillStyle = "#3E9C12"; x.font = `900 40px ${F}`; x.fillText(String(m.year), 90, yy); }
+    lastYear = m.year;
+    x.font = "44px system-ui, sans-serif"; x.fillText(m.emoji || "⭐", 280, yy + 2);
+    x.fillStyle = "#2B2A26"; x.font = `400 42px ${SF}`;
+    let t = m.title || ""; const maxW = W - 440; while (x.measureText(t).width > maxW && t.length > 3) t = t.slice(0, -2); if (t !== (m.title || "")) t = t.replace(/\s*\S*$/, "") + "…";
+    x.fillText(t, 350, yy);
+    if (roomy) {
+      let d = (m.text || "").replace(/\s+/g, " ").trim();
+      if (d) { x.fillStyle = "#8B8476"; x.font = `400 32px ${SF}`; while (x.measureText(d).width > maxW && d.length > 3) d = d.slice(0, -2); if (d !== (m.text || "").replace(/\s+/g, " ").trim()) d = d.replace(/\s*\S*$/, "") + "…"; x.fillText(d, 350, yy + 54); }
+      yy += 184;
+    } else yy += 92;
+  }
+  if (all.length > rows.length) { x.fillStyle = "#8B8476"; x.font = `800 34px ${F}`; x.fillText(`+ ${all.length - rows.length} more moments`, 350, yy); }
+  x.textAlign = "center"; x.fillStyle = "#2B2A26"; x.font = `900 46px ${F}`; x.fillText("Write your story, year by year", W / 2, H - 140);
+  x.fillStyle = "#3E9C12"; x.font = `900 48px ${F}`; x.fillText("inkstreak.app", W / 2, H - 76); x.textAlign = "left";
+  return cv;
+}
+async function openStoryShare(year) {
+  stShareYear = year || 0;
+  if (!storyMoments().filter(m => !year || m.year === year).length) { toast("Add a moment first."); return; }
+  $("#storyShareModal").hidden = false; $("#stShareH").textContent = year ? `Share ${year}` : "Share my story";
+  stCanvas = await storyCard(stShareYear); $("#stShareImg").src = stCanvas.toDataURL("image/png");
+  $("#stListText").value = storyText(stShareYear);
+  track("story_share_open", { kind: year ? "year" : "all" });
+}
+$("#stStart").addEventListener("click", () => {
+  const y = Math.round(+$("#stBorn").value);
+  if (!(y >= 1920 && y <= thisYear())) { toast(`Enter the year you were born, like ${thisYear() - 25}.`); return; }
+  S.story = Object.assign(S.story || { years: {} }, { born: y, name: $("#stName").value.trim().slice(0, 30), startedAt: Date.now() });
+  flushSave(); renderStory(); track("story_started", { decade: String(Math.floor(y / 10) * 10) });
+  toast("Your story starts here. Tap a prompt to add your first moment.");
+});
+$("#stAdd").addEventListener("click", () => openMoment({ year: thisYear() }));
+$("#stShare").addEventListener("click", () => openStoryShare(0));
+$("#stEmpty").addEventListener("change", renderStory);
+$("#stOrder").addEventListener("change", renderStory);
+$("#stPrompts").addEventListener("click", e => { const b = e.target.closest("[data-prompt]"); if (!b) return; const p = ST_PROMPTS.find(x => x.t === b.dataset.prompt); const age = p.age; openMoment({ year: age == null ? thisYear() : Math.min(thisYear(), S.story.born + age), title: p.t, emoji: p.e, q: p.q + (age == null ? " Change the year to when it happened." : " Change the year if it's off.") }); });
+$("#stList").addEventListener("click", e => {
+  const a = e.target.closest("[data-addyear]"), mo = e.target.closest("[data-mo]"), sh = e.target.closest("[data-shareyear]");
+  if (a) openMoment({ year: +a.dataset.addyear, focusNote: !!a.dataset.fromnote });
+  else if (mo) openMoment({ id: mo.dataset.mo, year: +mo.dataset.y });
+  else if (sh) openStoryShare(+sh.dataset.shareyear);
+});
+$("#moEmo").addEventListener("click", e => { const b = e.target.closest("[data-emo]"); if (b) { moEmo = b.dataset.emo; renderEmo(); } });
+$("#moNote").addEventListener("change", e => {
+  const n = S.notes.find(x => x.id === e.target.value); if (!n) return;
+  if (!$("#moTitle").value.trim()) $("#moTitle").value = noteTitle(n).slice(0, 80);
+  if (!$("#moText").value.trim()) $("#moText").value = (n.body || "").trim().slice(0, 400);
+  if (!moEdit) $("#moYear").value = new Date(n.createdAt || n.updatedAt).getFullYear();
+});
+$("#moSave").addEventListener("click", saveMoment);
+$("#moDel").addEventListener("click", deleteMoment);
+$("#storyBtn").addEventListener("click", () => {
+  const n = activeNote(); if (!n || !wc(n.body)) { toast("Write something in this note first."); return; }
+  if (!S.story || !S.story.born) { location.hash = "#story"; toast("Start your story first: add your birth year."); return; }
+  openMoment({ year: new Date(n.createdAt || Date.now()).getFullYear(), title: noteTitle(n).slice(0, 80), text: (n.body || "").trim().slice(0, 400), noteId: n.id, emoji: "✍️", q: "This note becomes a moment in your story. Shorten it to the part that matters." });
+});
+$("#stShareNative").addEventListener("click", () => stCanvas && stCanvas.toBlob(async b => {
+  const f = new File([b], "my-story.png", { type: "image/png" });
+  try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: "My story, year by year · inkstreak.app" }); track("story_shared", { kind: "image" }); return; } } catch (e) { return; }
+  $("#stShareDl").click();
+}));
+$("#stShareDl").addEventListener("click", () => { if (!stCanvas) return; track("story_shared", { kind: "download" }); try { const a = document.createElement("a"); a.href = stCanvas.toDataURL("image/png"); a.download = `my-story${stShareYear ? "-" + stShareYear : ""}.png`; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { toast("Press and hold the image to save it."); } });
+$("#stCopy").addEventListener("click", () => { copy($("#stListText").value, "Copied. Paste it anywhere."); track("story_shared", { kind: "list" }); });
 
 // ---- Save button ----
 function saveNow() {
